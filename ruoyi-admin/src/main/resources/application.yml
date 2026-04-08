@@ -145,3 +145,12 @@ xss:
   excludes: /system/notice
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+
+  # 阿里云OSS配置
+aliyun:
+  oss:
+    endpoint: oss-cn-shenzhen.aliyuncs.com
+    bucketName: xsy-upload-2026
+    accessKeyId: ${OSS_AK}
+    accessKeySecret: ${OSS_SK}
+
