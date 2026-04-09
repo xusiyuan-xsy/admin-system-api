@@ -1,4 +1,4 @@
-package com.ruoyi.web.controller.common;
+﻿package com.ruoyi.web.controller.common;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -17,7 +17,7 @@ import com.aliyun.oss.OSSClientBuilder;
 import com.ruoyi.common.core.domain.AjaxResult;
 
 /**
- * ������ OSS ͼƬ�ϴ�
+ * 阿里云 OSS 图片上传
  */
 @RestController
 @RequestMapping("/oss")
@@ -38,7 +38,7 @@ public class OssController
     private String bucketName;
 
     /**
-     * ��ͼ�ϴ��� OSS
+     * 单图上传到 OSS
      */
     @PostMapping("/upload")
     public AjaxResult upload(@RequestParam("file") MultipartFile file)
@@ -67,8 +67,8 @@ public class OssController
         }
         catch (Exception e)
         {
-            log.error("OSS�ļ��ϴ�ʧ��", e);
-            return AjaxResult.error("�ļ��ϴ�ʧ�ܣ�" + e.getMessage());
+            log.error("OSS文件上传失败", e);
+            return AjaxResult.error("文件上传失败：" + e.getMessage());
         }
         finally
         {
