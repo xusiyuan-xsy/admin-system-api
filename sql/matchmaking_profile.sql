@@ -3,8 +3,8 @@
 -- ----------------------------
 -- 相亲档案表（自身信息）
 -- ----------------------------
-drop table if exists blind_date_profile;
-create table blind_date_profile (
+drop table if exists sys_paying_user;
+create table sys_paying_user (
   id                bigint(20)      not null auto_increment              comment '主键ID',
   phone             varchar(11)     not null                             comment '手机号（登录账号）',
   password          varchar(100)    not null                             comment '登录密码（加密存储）',
@@ -45,8 +45,8 @@ create table blind_date_profile (
 -- ----------------------------
 -- 相亲择偶要求表
 -- ----------------------------
-drop table if exists blind_date_requirement;
-create table blind_date_requirement (
+drop table if exists sys_paying_requirement;
+create table sys_paying_requirement (
   id                bigint(20)      not null auto_increment              comment '主键ID',
   profile_id        bigint(20)      not null                             comment '关联档案ID（blind_date_profile.id）',
   age_min           smallint(4)     default null                         comment '要求对方最小出生年份（如1999）',
@@ -68,7 +68,7 @@ create table blind_date_requirement (
 -- ----------------------------
 -- 初始化数据
 -- ----------------------------
-insert into blind_date_profile (
+insert into sys_paying_user (
   phone, password,
   birth_year, zodiac, height, weight,
   hometown, current_city,
@@ -92,7 +92,7 @@ insert into blind_date_profile (
   '0', '0', 'admin', sysdate()
 );
 
-insert into blind_date_requirement (
+insert into sys_paying_requirement (
   profile_id,
   age_min, age_max,
   hometown_require, city_require,

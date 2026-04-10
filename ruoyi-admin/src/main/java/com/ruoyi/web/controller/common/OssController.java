@@ -1,4 +1,4 @@
-﻿package com.ruoyi.web.controller.common;
+package com.ruoyi.web.controller.common;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
