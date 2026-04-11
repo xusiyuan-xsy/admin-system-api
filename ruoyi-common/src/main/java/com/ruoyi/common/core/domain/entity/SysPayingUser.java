@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
- * 相亲档案-自身信息表 sys_paying_user
+ * 相亲档案信息 sys_paying_user
  */
 public class SysPayingUser extends BaseEntity
 {
@@ -30,6 +30,9 @@ public class SysPayingUser extends BaseEntity
 
     /** 姓名 */
     private String name;
+
+    /** 性别（0男 1女） */
+    private String sex;
 
     /** 出生年份 */
     private Integer birthYear;
@@ -85,7 +88,7 @@ public class SysPayingUser extends BaseEntity
     /** 是否接受异地（0否 1是） */
     private String acceptLongDist;
 
-    /** 相册图片URL数组 */
+    /** 相册图片URL数组，如["url1","url2"] */
     private String photos;
 
     /** 状态（0启用 1禁用） */
@@ -111,6 +114,9 @@ public class SysPayingUser extends BaseEntity
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getSex() { return sex; }
+    public void setSex(String sex) { this.sex = sex; }
 
     public Integer getBirthYear() { return birthYear; }
     public void setBirthYear(Integer birthYear) { this.birthYear = birthYear; }

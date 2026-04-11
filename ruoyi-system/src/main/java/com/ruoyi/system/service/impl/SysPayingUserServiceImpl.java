@@ -3,12 +3,15 @@ package com.ruoyi.system.service.impl;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.ruoyi.common.constant.UserConstants;
 import com.ruoyi.common.core.domain.entity.SysPayingUser;
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.mapper.SysPayingUserMapper;
 import com.ruoyi.system.service.ISysPayingUserService;
 
 /**
- * ç›¸äº²æ¡£æ¡ˆ-è‡ªèº«ä¿¡æ¯ ä¸šåŠ¡å±‚å®ç°
+ * ÏàÇ×µµ°¸-×ÔÉíĞÅÏ¢ ÒµÎñ²ãÊµÏÖ
  */
 @Service
 public class SysPayingUserServiceImpl implements ISysPayingUserService
@@ -16,9 +19,46 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
     @Autowired
     private SysPayingUserMapper payingUserMapper;
 
+    /**
+     * ¸ù¾İÌõ¼ş·ÖÒ³²éÑ¯ÓÃ»§ÁĞ±í
+     * 
+     * @param user ÏàÇ×µµ°¸ĞÅÏ¢
+     * @return ÏàÇ×µµ°¸ĞÅÏ¢¼¯ºÏĞÅÏ¢
+     */
     @Override
     public List<SysPayingUser> selectPayingUserList(SysPayingUser user)
     {
         return payingUserMapper.selectPayingUserList(user);
+    }
+
+    /**
+     * Ğ£ÑéÊÖ»úºÅÊÇ·ñÎ¨Ò»
+     * 
+     * @param user ÏàÇ×µµ°¸ĞÅÏ¢
+     * @return ½á¹û
+     */
+    @Override
+    public boolean checkPhoneUnique(SysPayingUser user)
+    {
+        Long userId = StringUtils.isNull(user.getId()) ? -1L : user.getId();
+        SysPayingUser info = payingUserMapper.checkPhoneUnique(user.getPhone());
+        if (StringUtils.isNotNull(info) && info.getId().longValue() != userId.longValue())
+        {
+            return UserConstants.NOT_UNIQUE;
+        }
+        return UserConstants.UNIQUE;
+    }
+
+    /**
+     * ĞÂÔöÓÃ»§ĞÅÏ¢
+     * 
+     * @param user ÏàÇ×µµ°¸ĞÅÏ¢
+     * @return ½á¹û
+     */
+    @Override
+    @Transactional
+    public int insertPayingUser(SysPayingUser user)
+    {
+        return payingUserMapper.insertPayingUser(user);
     }
 }

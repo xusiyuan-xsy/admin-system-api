@@ -11,6 +11,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="lastLoginIp"    column="last_login_ip"   />
         <result property="lastLoginTime"  column="last_login_time" />
         <result property="name"           column="name"            />
+        <result property="sex"            column="sex"             />
         <result property="birthYear"      column="birth_year"      />
         <result property="zodiac"         column="zodiac"          />
         <result property="height"         column="height"          />
@@ -40,7 +41,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectPayingUserVo">
-        select id, phone, last_login_ip, last_login_time, name, birth_year, zodiac,
+        select id, phone, last_login_ip, last_login_time, name, sex, birth_year, zodiac,
                height, weight, hometown, current_city, education, occupation, monthly_income,
                family_members, has_car, house_desc, hobbies, advantages,
                smoke_habit, drink_habit, has_tattoo, accept_long_dist, photos,
@@ -66,5 +67,71 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             </if>
         </where>
     </select>
+
+    <select id="checkPhoneUnique" parameterType="String" resultMap="SysPayingUserResult">
+        select id, phone from sys_paying_user where phone = #{phone} and del_flag = '0' limit 1
+    </select>
+
+    <insert id="insertPayingUser" parameterType="com.ruoyi.common.core.domain.entity.SysPayingUser" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_paying_user (
+            <if test="phone != null and phone != ''">phone,</if>
+            <if test="password != null and password != ''">password,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="sex != null and sex != ''">sex,</if>
+            <if test="birthYear != null">birth_year,</if>
+            <if test="zodiac != null and zodiac != ''">zodiac,</if>
+            <if test="height != null">height,</if>
+            <if test="weight != null">weight,</if>
+            <if test="hometown != null and hometown != ''">hometown,</if>
+            <if test="currentCity != null and currentCity != ''">current_city,</if>
+            <if test="education != null and education != ''">education,</if>
+            <if test="occupation != null and occupation != ''">occupation,</if>
+            <if test="monthlyIncome != null">monthly_income,</if>
+            <if test="familyMembers != null and familyMembers != ''">family_members,</if>
+            <if test="hasCar != null and hasCar != ''">has_car,</if>
+            <if test="houseDesc != null and houseDesc != ''">house_desc,</if>
+            <if test="hobbies != null and hobbies != ''">hobbies,</if>
+            <if test="advantages != null and advantages != ''">advantages,</if>
+            <if test="smokeHabit != null and smokeHabit != ''">smoke_habit,</if>
+            <if test="drinkHabit != null and drinkHabit != ''">drink_habit,</if>
+            <if test="hasTattoo != null and hasTattoo != ''">has_tattoo,</if>
+            <if test="acceptLongDist != null and acceptLongDist != ''">accept_long_dist,</if>
+            <if test="photos != null and photos != ''">photos,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            del_flag,
+            create_time
+        ) values (
+            <if test="phone != null and phone != ''">#{phone},</if>
+            <if test="password != null and password != ''">#{password},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="sex != null and sex != ''">#{sex},</if>
+            <if test="birthYear != null">#{birthYear},</if>
+            <if test="zodiac != null and zodiac != ''">#{zodiac},</if>
+            <if test="height != null">#{height},</if>
+            <if test="weight != null">#{weight},</if>
+            <if test="hometown != null and hometown != ''">#{hometown},</if>
+            <if test="currentCity != null and currentCity != ''">#{currentCity},</if>
+            <if test="education != null and education != ''">#{education},</if>
+            <if test="occupation != null and occupation != ''">#{occupation},</if>
+            <if test="monthlyIncome != null">#{monthlyIncome},</if>
+            <if test="familyMembers != null and familyMembers != ''">#{familyMembers},</if>
+            <if test="hasCar != null and hasCar != ''">#{hasCar},</if>
+            <if test="houseDesc != null and houseDesc != ''">#{houseDesc},</if>
+            <if test="hobbies != null and hobbies != ''">#{hobbies},</if>
+            <if test="advantages != null and advantages != ''">#{advantages},</if>
+            <if test="smokeHabit != null and smokeHabit != ''">#{smokeHabit},</if>
+            <if test="drinkHabit != null and drinkHabit != ''">#{drinkHabit},</if>
+            <if test="hasTattoo != null and hasTattoo != ''">#{hasTattoo},</if>
+            <if test="acceptLongDist != null and acceptLongDist != ''">#{acceptLongDist},</if>
+            <if test="photos != null and photos != ''">#{photos},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            '0',
+            sysdate()
+        )
+    </insert>
 
 </mapper>

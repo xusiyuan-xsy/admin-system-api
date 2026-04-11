@@ -21,6 +21,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.core.domain.entity.SysPayingUser;
 import com.ruoyi.system.service.ISysPayingUserService;
 
@@ -45,6 +46,23 @@ public class SysPayingUsersController extends BaseController
         startPage();
         List<SysPayingUser> list = payingUserService.selectPayingUserList(user);
         return getDataTable(list);
+    }
+
+    /**
+     * 新增用户
+     */
+    @PreAuthorize("@ss.hasPermi('system:payingUsers:add')")
+    @Log(title = "用户管理", businessType = BusinessType.INSERT)
+    @PostMapping
+    public AjaxResult add(@Validated @RequestBody SysPayingUser user)
+    {
+        if (StringUtils.isNotEmpty(user.getPhone()) && !payingUserService.checkPhoneUnique(user))
+        {
+            return error("新增用户'" + user.getPhone() + "'失败，手机号码已存在");
+        }
+        user.setCreateBy(getUsername());
+        user.setPassword(SecurityUtils.encryptPassword(user.getPassword()));
+        return toAjax(payingUserService.insertPayingUser(user));
     }
 
    

@@ -11,6 +11,7 @@ create table sys_paying_user (
   last_login_ip     varchar(128)    default null                         comment '最后登录IP',
   last_login_time   datetime        default null                         comment '最后登录时间',
   name              varchar(20)     default null                         comment '姓名',
+  sex               char(1)         default '0'                          comment '性别（0男 1女）',
   birth_year        smallint(4)     not null                             comment '出生年份',
   zodiac            varchar(10)     default null                         comment '属相',
   height            smallint(3)      not null                             comment '身高(cm)',
@@ -70,7 +71,7 @@ create table sys_paying_requirement (
 -- ----------------------------
 insert into sys_paying_user (
   phone, password,
-  birth_year, zodiac, height, weight,
+  sex, birth_year, zodiac, height, weight,
   hometown, current_city,
   education, occupation, monthly_income,
   family_members,
@@ -81,12 +82,12 @@ insert into sys_paying_user (
   status, del_flag, create_by, create_time
 ) values (
   '13800000000', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIbDr9G',
-  1999, '兔', 172, 125,
+  '0', 2010, '虎', 180, 135,
   '汕头潮南', '深圳',
-  '大专', '程序员', 12000.00,
+  '大专', '跨境电商', 20000.00,
   '父母、哥哥、姐姐',
-  '0', '家里商品房，半座老宅，一块地',
-  '旅游、看动漫、美食、运动', '会做饭、情绪稳定、性格开朗',
+  '0', '商品房',
+  '运动', '情绪稳定、性格开朗',
   '2', '0', '0',
   '0',
   '0', '0', 'admin', sysdate()
