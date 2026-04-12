@@ -2,8 +2,12 @@ package com.ruoyi.common.core.domain.entity;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.ruoyi.common.core.domain.BaseEntity;
+import com.ruoyi.common.jackson.JsonStringListDeserializer;
+import com.ruoyi.common.jackson.StringOrArrayToStringDeserializer;
 
 /**
  * 相亲档案信息 sys_paying_user
@@ -62,6 +66,7 @@ public class SysPayingUser extends BaseEntity
     private BigDecimal monthlyIncome;
 
     /** 家庭成员描述 */
+    @JsonDeserialize(using = StringOrArrayToStringDeserializer.class)
     private String familyMembers;
 
     /** 是否有车（0无 1有） */
@@ -71,9 +76,11 @@ public class SysPayingUser extends BaseEntity
     private String houseDesc;
 
     /** 兴趣爱好 */
+    @JsonDeserialize(using = StringOrArrayToStringDeserializer.class)
     private String hobbies;
 
     /** 个人优点/闪光点 */
+    @JsonDeserialize(using = StringOrArrayToStringDeserializer.class)
     private String advantages;
 
     /** 抽烟情况（0无 1偶尔 2经常） */
@@ -88,8 +95,9 @@ public class SysPayingUser extends BaseEntity
     /** 是否接受异地（0否 1是） */
     private String acceptLongDist;
 
-    /** 相册图片URL数组，如["url1","url2"] */
-    private String photos;
+    /** 相册图片 URL 列表 */
+    @JsonDeserialize(using = JsonStringListDeserializer.class)
+    private List<String> photos;
 
     /** 状态（0启用 1禁用） */
     private String status;
@@ -172,8 +180,8 @@ public class SysPayingUser extends BaseEntity
     public String getAcceptLongDist() { return acceptLongDist; }
     public void setAcceptLongDist(String acceptLongDist) { this.acceptLongDist = acceptLongDist; }
 
-    public String getPhotos() { return photos; }
-    public void setPhotos(String photos) { this.photos = photos; }
+    public List<String> getPhotos() { return photos; }
+    public void setPhotos(List<String> photos) { this.photos = photos; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
