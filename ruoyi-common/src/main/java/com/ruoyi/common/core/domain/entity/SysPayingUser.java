@@ -3,26 +3,37 @@ package com.ruoyi.common.core.domain.entity;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.ruoyi.common.annotation.Excel;
+import com.ruoyi.common.annotation.Excel.ColumnType;
+import com.ruoyi.common.annotation.Excel.Type;
+import com.ruoyi.common.annotation.Excels;
 import com.ruoyi.common.core.domain.BaseEntity;
 import com.ruoyi.common.jackson.JsonStringListDeserializer;
 import com.ruoyi.common.jackson.StringOrArrayToStringDeserializer;
+import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.xss.Xss;
 
 /**
- * 相亲档案信息 sys_paying_user
+ * 相亲档案表（自身信息） sys_paying_user
  */
 public class SysPayingUser extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
-    /** 主键ID */
+    /** 用户ID */
+    @Excel(name = "用户ID", type = Type.EXPORT, cellType = ColumnType.NUMERIC, prompt = "用户ID")
     private Long id;
 
     /** 手机号（登录账号） */
+    @Excel(name = "手机号", cellType = ColumnType.TEXT)
     private String phone;
 
     /** 登录密码（加密存储） */
+    @Excel(name = "登录密码", cellType = ColumnType.TEXT)
     private String password;
 
     /** 最后登录IP */
@@ -30,76 +41,99 @@ public class SysPayingUser extends BaseEntity
 
     /** 最后登录时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "最后登录时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss", type = Type.EXPORT)
     private Date lastLoginTime;
 
     /** 姓名 */
+    @Excel(name = "姓名", cellType = ColumnType.TEXT)
     private String name;
 
     /** 性别（0男 1女） */
+    @Excel(name = "性别", readConverterExp = "0=男,1=女")
     private String sex;
 
-    /** 出生年份 */
+    /** 出生年份 */  
+    @Excel(name = "出生年份", cellType = ColumnType.NUMERIC)
     private Integer birthYear;
 
     /** 属相 */
+    @Excel(name = "属相", cellType = ColumnType.TEXT)
     private String zodiac;
 
     /** 身高(cm) */
+    @Excel(name = "身高(cm)", cellType = ColumnType.NUMERIC)
     private Integer height;
 
     /** 体重(斤) */
+    @Excel(name = "体重(斤)", cellType = ColumnType.NUMERIC)
     private Integer weight;
 
     /** 家乡 */
+    @Excel(name = "家乡", cellType = ColumnType.TEXT)
     private String hometown;
 
     /** 现居城市 */
+    @Excel(name = "现居城市", cellType = ColumnType.TEXT)
     private String currentCity;
 
     /** 学历 */
+    @Excel(name = "学历", cellType = ColumnType.TEXT)
     private String education;
 
     /** 职业 */
+    @Excel(name = "职业", cellType = ColumnType.TEXT)
     private String occupation;
 
     /** 月收入(元) */
+    @Excel(name = "月收入(元)", cellType = ColumnType.NUMERIC)
     private BigDecimal monthlyIncome;
 
     /** 家庭成员描述 */
+    @Excel(name = "家庭成员描述", cellType = ColumnType.TEXT)
     @JsonDeserialize(using = StringOrArrayToStringDeserializer.class)
     private String familyMembers;
 
     /** 是否有车（0无 1有） */
+    @Excel(name = "是否有车", readConverterExp = "0=无,1=有")
     private String hasCar;
 
     /** 房产情况描述 */
+    @Excel(name = "房产情况描述", cellType = ColumnType.TEXT)
     private String houseDesc;
 
     /** 兴趣爱好 */
+    @Excel(name = "兴趣爱好", cellType = ColumnType.TEXT)
     @JsonDeserialize(using = StringOrArrayToStringDeserializer.class)
     private String hobbies;
 
     /** 个人优点/闪光点 */
+    @Excel(name = "个人优点/闪光点", cellType = ColumnType.TEXT)
     @JsonDeserialize(using = StringOrArrayToStringDeserializer.class)
     private String advantages;
 
     /** 抽烟情况（0无 1偶尔 2经常） */
+    @Excel(name = "抽烟情况", readConverterExp = "0=无,1=偶尔,2=经常")
     private String smokeHabit;
 
     /** 喝酒情况（0无 1偶尔 2经常） */
+    @Excel(name = "喝酒情况", readConverterExp = "0=无,1=偶尔,2=经常")
     private String drinkHabit;
 
     /** 是否有纹身（0无 1有） */
+    @Excel(name = "是否有纹身", readConverterExp = "0=无,1=有")
     private String hasTattoo;
 
     /** 是否接受异地（0否 1是） */
+    @Excel(name = "是否接受异地", readConverterExp = "0=否,1=是")
     private String acceptLongDist;
 
     /** 相册图片 URL 列表 */
+    @Excel(name = "相册图片 URL 列表", cellType = ColumnType.TEXT)
     @JsonDeserialize(using = JsonStringListDeserializer.class)
     private List<String> photos;
 
     /** 状态（0启用 1禁用） */
+    @Excel(name = "状态", readConverterExp = "0=启用,1=禁用")
     private String status;
 
     /** 删除标志（0存在 2删除） */
@@ -108,9 +142,11 @@ public class SysPayingUser extends BaseEntity
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
+    @Size(min = 0, max = 11, message = "手机号码长度不能超过11个字符")
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 

@@ -4,7 +4,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.SysPayingUserMapper">
 
-    <resultMap type="com.ruoyi.common.core.domain.entity.SysPayingUser" id="SysPayingUserResult">
+    <resultMap type="SysPayingUser" id="SysPayingUserResult">
         <id     property="id"             column="id"              />
         <result property="phone"          column="phone"           />
         <result property="password"       column="password"        />
@@ -49,7 +49,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from sys_paying_user
     </sql>
 
-    <select id="selectPayingUserList" parameterType="com.ruoyi.common.core.domain.entity.SysPayingUser" resultMap="SysPayingUserResult">
+    <select id="selectPayingUserList"  parameterType="SysPayingUser" resultMap="SysPayingUserResult">
         <include refid="selectPayingUserVo"/>
         <where>
             and del_flag = '0'
@@ -65,14 +65,67 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null and status != ''">
                 and status = #{status}
             </if>
+            <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+                and date_format(create_time,'%Y%m%d') &gt;= date_format(#{params.beginTime},'%Y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+                and date_format(create_time,'%Y%m%d') &lt;= date_format(#{params.endTime},'%Y%m%d')
+            </if>
         </where>
     </select>
 
-    <select id="checkPhoneUnique" parameterType="String" resultMap="SysPayingUserResult">
-        select id, phone from sys_paying_user where phone = #{phone} and del_flag = '0' limit 1
+    <select id="selectPayingUserById" parameterType="Long" resultMap="SysPayingUserResult">
+        <include refid="selectPayingUserVo"/>
+        where id = #{id}
     </select>
 
-    <insert id="insertPayingUser" parameterType="com.ruoyi.common.core.domain.entity.SysPayingUser" useGeneratedKeys="true" keyProperty="id">
+    <select id="checkPhoneUnique" parameterType="String" resultMap="SysPayingUserResult">
+        <include refid="selectPayingUserVo"/>
+        where phone = #{phone} and del_flag = '0' limit 1
+    </select>
+
+    <update id="updatePayingUser" parameterType="SysPayingUser">
+        update sys_paying_user
+        <set>
+            <if test="phone != null and phone != ''">phone = #{phone},</if>
+            <if test="password != null and password != ''">password = #{password},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="sex != null and sex != ''">sex = #{sex},</if>
+            <if test="birthYear != null">birth_year = #{birthYear},</if>
+            <if test="zodiac != null and zodiac != ''">zodiac = #{zodiac},</if>
+            <if test="height != null">height = #{height},</if>
+            <if test="weight != null">weight = #{weight},</if>
+            <if test="hometown != null and hometown != ''">hometown = #{hometown},</if>
+            <if test="currentCity != null and currentCity != ''">current_city = #{currentCity},</if>
+            <if test="education != null and education != ''">education = #{education},</if>
+            <if test="occupation != null and occupation != ''">occupation = #{occupation},</if>
+            <if test="monthlyIncome != null">monthly_income = #{monthlyIncome},</if>
+            <if test="familyMembers != null and familyMembers != ''">family_members = #{familyMembers},</if>
+            <if test="hasCar != null and hasCar != ''">has_car = #{hasCar},</if>
+            <if test="houseDesc != null and houseDesc != ''">house_desc = #{houseDesc},</if>
+            <if test="hobbies != null and hobbies != ''">hobbies = #{hobbies},</if>
+            <if test="advantages != null and advantages != ''">advantages = #{advantages},</if>
+            <if test="smokeHabit != null and smokeHabit != ''">smoke_habit = #{smokeHabit},</if>
+            <if test="drinkHabit != null and drinkHabit != ''">drink_habit = #{drinkHabit},</if>
+            <if test="hasTattoo != null and hasTattoo != ''">has_tattoo = #{hasTattoo},</if>
+            <if test="acceptLongDist != null and acceptLongDist != ''">accept_long_dist = #{acceptLongDist},</if>
+            <if test="photos != null">photos = #{photos, typeHandler=com.ruoyi.framework.handler.JsonStringListTypeHandler},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePayingUserByIds" parameterType="Long[]">
+        update sys_paying_user set del_flag = '2' where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <insert id="insertPayingUser" parameterType="SysPayingUser" useGeneratedKeys="true" keyProperty="id">
         insert into sys_paying_user (
             <if test="phone != null and phone != ''">phone,</if>
             <if test="password != null and password != ''">password,</if>

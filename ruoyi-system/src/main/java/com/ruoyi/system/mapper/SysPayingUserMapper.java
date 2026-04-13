@@ -17,9 +17,23 @@ public interface SysPayingUserMapper
      * 校验手机号是否唯一
      */
     public SysPayingUser checkPhoneUnique(String phone);
-
+    /**
+     * 通过用户ID查询用户
+     * 
+     * @param id 用户ID
+     * @return 用户对象信息
+     */
+    public SysPayingUser selectPayingUserById(Long id);
     /**
      * 新增用户信息
      */
     public int insertPayingUser(SysPayingUser user);
+    /**
+     * 修改用户信息
+     */
+    public int updatePayingUser(SysPayingUser user);
+    /**
+     * 删除用户信息
+     */
+    public int deletePayingUserByIds(Long[] ids);
 }
