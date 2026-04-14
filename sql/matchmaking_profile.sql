@@ -1,7 +1,7 @@
 ﻿SET NAMES utf8mb4;
 
 -- ----------------------------
--- 相亲档案表（自身信息）
+-- 档案表（自身信息）
 -- ----------------------------
 drop table if exists sys_paying_user;
 create table sys_paying_user (
@@ -23,6 +23,7 @@ create table sys_paying_user (
   monthly_income    decimal(10, 2)  default null                         comment '月收入(元)',
   family_members    varchar(100)    default null                         comment '家庭成员描述',
   has_car           char(1)         default '0'                          comment '是否有车（0无 1有）',
+  has_house         char(1)         default '0'                          comment '是否有房（0无 1有）',
   house_desc        varchar(200)    default null                         comment '房产情况描述',
   hobbies           varchar(200)    default null                         comment '兴趣爱好',
   advantages        varchar(200)    default null                         comment '个人优点/闪光点',
@@ -40,30 +41,10 @@ create table sys_paying_user (
   update_time       datetime                                             comment '更新时间',
   primary key (id),
   unique key uk_phone (phone)
-) engine=innodb auto_increment=1 comment = '相亲档案-自身信息表';
+) engine=innodb auto_increment=1 comment = '档案-自身信息表';
 
 
--- ----------------------------
--- 相亲择偶要求表
--- ----------------------------
-drop table if exists sys_paying_requirement;
-create table sys_paying_requirement (
-  id                bigint(20)      not null auto_increment              comment '主键ID',
-  profile_id        bigint(20)      not null                             comment '关联档案ID（blind_date_profile.id）',
-  age_min           smallint(4)     default null                         comment '要求对方最小出生年份（如1999）',
-  age_max           smallint(4)     default null                         comment '要求对方最大出生年份（如2004）',
-  hometown_require  varchar(100)    default null                         comment '要求对方家乡',
-  city_require      varchar(100)    default null                         comment '要求对方所在城市',
-  height_min        smallint(3)      default null                         comment '要求对方最低身高(cm)',
-  height_max        smallint(3)      default null                         comment '要求对方最高身高(cm)',
-  no_tattoo         char(1)         default '1'                          comment '要求无纹身（0不限 1要求无纹身）',
-  other_require     varchar(500)    default null                         comment '其他要求',
-  create_by         varchar(64)     default ''                           comment '创建者',
-  create_time       datetime                                             comment '创建时间',
-  update_by         varchar(64)     default ''                           comment '更新者',
-  update_time       datetime                                             comment '更新时间',
-  primary key (id)
-) engine=innodb auto_increment=1 comment = '相亲档案-择偶要求表';
+
 
 
 -- ----------------------------
@@ -75,7 +56,7 @@ insert into sys_paying_user (
   hometown, current_city,
   education, occupation, monthly_income,
   family_members,
-  has_car, house_desc,
+  has_car, has_house, house_desc,
   hobbies, advantages,
   smoke_habit, drink_habit, has_tattoo,
   accept_long_dist,
@@ -86,27 +67,69 @@ insert into sys_paying_user (
   '汕头潮南', '深圳',
   '大专', '跨境电商', 20000.00,
   '父母、哥哥、姐姐',
-  '0', '商品房',
+  '0', '0', '商品房',
   '运动', '情绪稳定、性格开朗',
   '2', '0', '0',
   '0',
   '0', '0', 'admin', sysdate()
 );
 
+
+
+
+-- ----------------------------
+-- 要求表
+-- ----------------------------
+drop table if exists sys_paying_requirement;
+create table sys_paying_requirement (
+  id                bigint(20)      not null auto_increment              comment '主键ID',
+  paying_id         bigint(20)      not null                             comment '关联档案ID（sys_paying_user.id）',
+  age_min           smallint(4)     default null                         comment '要求对方最小出生年份（如1999）',
+  age_max           smallint(4)     default null                         comment '要求对方最大出生年份（如2004）',
+  hometown_require  varchar(100)    default null                         comment '要求对方家乡',
+  city_require      varchar(100)    default null                         comment '要求对方所在城市',
+  education         varchar(20)     default null                         comment '要求对方学历（高中/大专/本科/硕士/博士）',
+  height_min        smallint(3)      default null                        comment '要求对方最低身高(cm)',
+  height_max        smallint(3)      default null                        comment '要求对方最高身高(cm)',
+  no_tattoo         char(1)         default '1'                          comment '要求无纹身（0不限 1要求无纹身）',
+  accept_long_dist  char(1)         default '0'                          comment '是否接受异地（0否 1是）',
+  smoke_habit       char(1)         default '0'                          comment '抽烟情况（0无 1偶尔 2经常）',
+  drink_habit       char(1)         default '0'                          comment '喝酒情况（0无 1偶尔 2经常）',
+  has_car           char(1)         default '0'                          comment '是否有车（0无 1有）',
+  has_house         char(1)         default '0'                          comment '是否有房（0无 1有）',
+  other_require     varchar(500)    default null                         comment '其他要求',
+  create_by         varchar(64)     default ''                           comment '创建者',
+  create_time       datetime                                             comment '创建时间',
+  update_by         varchar(64)     default ''                           comment '更新者',
+  update_time       datetime                                             comment '更新时间',
+  primary key (id)
+) engine=innodb auto_increment=1 comment = '档案-要求表';
+
+
+-- ----------------------------
+-- 初始化数据
+-- ----------------------------
+
 insert into sys_paying_requirement (
-  profile_id,
+  id,
+  paying_id,
   age_min, age_max,
   hometown_require, city_require,
+  education, 
   height_min, height_max,
   no_tattoo,
+  accept_long_dist, smoke_habit, drink_habit, has_car, has_house,
   other_require,
   create_by, create_time
 ) values (
   1,
+  1,
   1999, 2004,
   '汕头', '深圳',
+  '大专',
   155, 180,
   '1',
+  '0', '0', '0', '0', '0',
   '无特殊要求',
   'admin', sysdate()
 );

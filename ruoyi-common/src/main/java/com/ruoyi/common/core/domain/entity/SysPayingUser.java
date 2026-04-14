@@ -97,6 +97,10 @@ public class SysPayingUser extends BaseEntity
     @Excel(name = "是否有车", readConverterExp = "0=无,1=有")
     private String hasCar;
 
+    /** 是否有房（0无 1有） */
+    @Excel(name = "是否有房", readConverterExp = "0=无,1=有")
+    private String hasHouse;
+
     /** 房产情况描述 */
     @Excel(name = "房产情况描述", cellType = ColumnType.TEXT)
     private String houseDesc;
@@ -193,6 +197,9 @@ public class SysPayingUser extends BaseEntity
 
     public String getHasCar() { return hasCar; }
     public void setHasCar(String hasCar) { this.hasCar = hasCar; }
+
+    public String getHasHouse() { return hasHouse; }
+    public void setHasHouse(String hasHouse) { this.hasHouse = hasHouse; }
 
     public String getHouseDesc() { return houseDesc; }
     public void setHouseDesc(String houseDesc) { this.houseDesc = houseDesc; }

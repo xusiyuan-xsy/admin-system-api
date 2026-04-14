@@ -23,6 +23,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="monthlyIncome"  column="monthly_income"  />
         <result property="familyMembers"  column="family_members"  />
         <result property="hasCar"         column="has_car"         />
+        <result property="hasHouse"       column="has_house"       />
         <result property="houseDesc"      column="house_desc"      />
         <result property="hobbies"        column="hobbies"         />
         <result property="advantages"     column="advantages"      />
@@ -43,7 +44,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <sql id="selectPayingUserVo">
         select id, phone, last_login_ip, last_login_time, name, sex, birth_year, zodiac,
                height, weight, hometown, current_city, education, occupation, monthly_income,
-               family_members, has_car, house_desc, hobbies, advantages,
+               family_members, has_car, has_house, house_desc, hobbies, advantages,
                smoke_habit, drink_habit, has_tattoo, accept_long_dist, photos,
                status, del_flag, remark, create_by, create_time, update_by, update_time
         from sys_paying_user
@@ -102,6 +103,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="monthlyIncome != null">monthly_income = #{monthlyIncome},</if>
             <if test="familyMembers != null and familyMembers != ''">family_members = #{familyMembers},</if>
             <if test="hasCar != null and hasCar != ''">has_car = #{hasCar},</if>
+            <if test="hasHouse != null and hasHouse != ''">has_house = #{hasHouse},</if>
             <if test="houseDesc != null and houseDesc != ''">house_desc = #{houseDesc},</if>
             <if test="hobbies != null and hobbies != ''">hobbies = #{hobbies},</if>
             <if test="advantages != null and advantages != ''">advantages = #{advantages},</if>
@@ -142,6 +144,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="monthlyIncome != null">monthly_income,</if>
             <if test="familyMembers != null and familyMembers != ''">family_members,</if>
             <if test="hasCar != null and hasCar != ''">has_car,</if>
+            <if test="hasHouse != null and hasHouse != ''">has_house,</if>
             <if test="houseDesc != null and houseDesc != ''">house_desc,</if>
             <if test="hobbies != null and hobbies != ''">hobbies,</if>
             <if test="advantages != null and advantages != ''">advantages,</if>
@@ -171,6 +174,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="monthlyIncome != null">#{monthlyIncome},</if>
             <if test="familyMembers != null and familyMembers != ''">#{familyMembers},</if>
             <if test="hasCar != null and hasCar != ''">#{hasCar},</if>
+            <if test="hasHouse != null and hasHouse != ''">#{hasHouse},</if>
             <if test="houseDesc != null and houseDesc != ''">#{houseDesc},</if>
             <if test="hobbies != null and hobbies != ''">#{hobbies},</if>
             <if test="advantages != null and advantages != ''">#{advantages},</if>
