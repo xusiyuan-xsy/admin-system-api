@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysPayingRequirementMapper">
+
+    <resultMap type="SysPayingRequirement" id="SysPayingRequirementResult">
+        <id     property="id"              column="id"               />
+        <result property="payingId"        column="paying_id"        />
+        <result property="ageMin"          column="age_min"          />
+        <result property="ageMax"          column="age_max"          />
+        <result property="hometownRequire" column="hometown_require" />
+        <result property="cityRequire"     column="city_require"     />
+        <result property="education"       column="education"        />
+        <result property="heightMin"       column="height_min"       />
+        <result property="heightMax"       column="height_max"       />
+        <result property="noTattoo"        column="no_tattoo"        />
+        <result property="acceptLongDist"  column="accept_long_dist" />
+        <result property="smokeHabit"      column="smoke_habit"      />
+        <result property="drinkHabit"      column="drink_habit"      />
+        <result property="hasCar"          column="has_car"          />
+        <result property="hasHouse"        column="has_house"        />
+        <result property="otherRequire"    column="other_require"    />
+        <result property="createBy"        column="create_by"        />
+        <result property="createTime"      column="create_time"      />
+        <result property="updateBy"        column="update_by"        />
+        <result property="updateTime"      column="update_time"      />
+    </resultMap>
+
+    <select id="selectRequirementByPayingId" parameterType="Long" resultMap="SysPayingRequirementResult">
+        select id, paying_id, age_min, age_max, hometown_require, city_require, education,
+               height_min, height_max, no_tattoo, accept_long_dist, smoke_habit, drink_habit,
+               has_car, has_house, other_require, create_by, create_time, update_by, update_time
+        from sys_paying_requirement
+        where paying_id = #{payingId}
+        limit 1
+    </select>
+
+    <insert id="insertRequirement" parameterType="SysPayingRequirement" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_paying_requirement (
+            paying_id,
+            <if test="ageMin != null">age_min,</if>
+            <if test="ageMax != null">age_max,</if>
+            <if test="hometownRequire != null and hometownRequire != ''">hometown_require,</if>
+            <if test="cityRequire != null and cityRequire != ''">city_require,</if>
+            <if test="education != null and education != ''">education,</if>
+            <if test="heightMin != null">height_min,</if>
+            <if test="heightMax != null">height_max,</if>
+            <if test="noTattoo != null and noTattoo != ''">no_tattoo,</if>
+            <if test="acceptLongDist != null and acceptLongDist != ''">accept_long_dist,</if>
+            <if test="smokeHabit != null and smokeHabit != ''">smoke_habit,</if>
+            <if test="drinkHabit != null and drinkHabit != ''">drink_habit,</if>
+            <if test="hasCar != null and hasCar != ''">has_car,</if>
+            <if test="hasHouse != null and hasHouse != ''">has_house,</if>
+            <if test="otherRequire != null and otherRequire != ''">other_require,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        ) values (
+            #{payingId},
+            <if test="ageMin != null">#{ageMin},</if>
+            <if test="ageMax != null">#{ageMax},</if>
+            <if test="hometownRequire != null and hometownRequire != ''">#{hometownRequire},</if>
+            <if test="cityRequire != null and cityRequire != ''">#{cityRequire},</if>
+            <if test="education != null and education != ''">#{education},</if>
+            <if test="heightMin != null">#{heightMin},</if>
+            <if test="heightMax != null">#{heightMax},</if>
+            <if test="noTattoo != null and noTattoo != ''">#{noTattoo},</if>
+            <if test="acceptLongDist != null and acceptLongDist != ''">#{acceptLongDist},</if>
+            <if test="smokeHabit != null and smokeHabit != ''">#{smokeHabit},</if>
+            <if test="drinkHabit != null and drinkHabit != ''">#{drinkHabit},</if>
+            <if test="hasCar != null and hasCar != ''">#{hasCar},</if>
+            <if test="hasHouse != null and hasHouse != ''">#{hasHouse},</if>
+            <if test="otherRequire != null and otherRequire != ''">#{otherRequire},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+        )
+    </insert>
+
+    <update id="updateRequirement" parameterType="SysPayingRequirement">
+        update sys_paying_requirement
+        <set>
+            <if test="ageMin != null">age_min = #{ageMin},</if>
+            <if test="ageMax != null">age_max = #{ageMax},</if>
+            <if test="hometownRequire != null">hometown_require = #{hometownRequire},</if>
+            <if test="cityRequire != null">city_require = #{cityRequire},</if>
+            <if test="education != null">education = #{education},</if>
+            <if test="heightMin != null">height_min = #{heightMin},</if>
+            <if test="heightMax != null">height_max = #{heightMax},</if>
+            <if test="noTattoo != null and noTattoo != ''">no_tattoo = #{noTattoo},</if>
+            <if test="acceptLongDist != null and acceptLongDist != ''">accept_long_dist = #{acceptLongDist},</if>
+            <if test="smokeHabit != null and smokeHabit != ''">smoke_habit = #{smokeHabit},</if>
+            <if test="drinkHabit != null and drinkHabit != ''">drink_habit = #{drinkHabit},</if>
+            <if test="hasCar != null and hasCar != ''">has_car = #{hasCar},</if>
+            <if test="hasHouse != null and hasHouse != ''">has_house = #{hasHouse},</if>
+            <if test="otherRequire != null">other_require = #{otherRequire},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where paying_id = #{payingId}
+    </update>
+
+</mapper>
