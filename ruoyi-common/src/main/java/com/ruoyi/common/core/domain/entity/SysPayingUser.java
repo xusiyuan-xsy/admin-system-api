@@ -128,7 +128,6 @@ public class SysPayingUser extends BaseEntity
     private String acceptLongDist;
 
     /** 相册图片 URL 列表 */
-    @Excel(name = "相册图片 URL 列表", cellType = ColumnType.TEXT)
     @JsonDeserialize(using = JsonStringListDeserializer.class)
     private List<String> photos;
 
