@@ -18,7 +18,7 @@ import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.xss.Xss;
 
 /**
- * 相亲档案表（自身信息） sys_paying_user
+ * 档案表（自身信息） sys_paying_user
  */
 public class SysPayingUser extends BaseEntity
 {
@@ -142,6 +142,9 @@ public class SysPayingUser extends BaseEntity
     /** 删除标志（0存在 2删除） */
     private String delFlag;
 
+    /** ?????????? */
+    private SysPayingRequirement requirement;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -230,4 +233,7 @@ public class SysPayingUser extends BaseEntity
 
     public String getDelFlag() { return delFlag; }
     public void setDelFlag(String delFlag) { this.delFlag = delFlag; }
+
+    public SysPayingRequirement getRequirement() { return requirement; }
+    public void setRequirement(SysPayingRequirement requirement) { this.requirement = requirement; }
 }

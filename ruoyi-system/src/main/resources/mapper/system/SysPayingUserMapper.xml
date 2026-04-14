@@ -39,50 +39,85 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="createTime"     column="create_time"     />
         <result property="updateBy"       column="update_by"       />
         <result property="updateTime"     column="update_time"     />
+        <association property="requirement" javaType="SysPayingRequirement">
+            <id     property="id"              column="req_id"               />
+            <result property="payingId"        column="req_paying_id"        />
+            <result property="ageMin"          column="req_age_min"          />
+            <result property="ageMax"          column="req_age_max"          />
+            <result property="hometownRequire" column="req_hometown_require" />
+            <result property="cityRequire"     column="req_city_require"     />
+            <result property="education"       column="req_education"        />
+            <result property="heightMin"       column="req_height_min"       />
+            <result property="heightMax"       column="req_height_max"       />
+            <result property="noTattoo"        column="req_no_tattoo"        />
+            <result property="acceptLongDist"  column="req_accept_long_dist" />
+            <result property="smokeHabit"      column="req_smoke_habit"      />
+            <result property="drinkHabit"      column="req_drink_habit"      />
+            <result property="hasCar"          column="req_has_car"          />
+            <result property="hasHouse"        column="req_has_house"        />
+            <result property="otherRequire"    column="req_other_require"    />
+        </association>
     </resultMap>
 
     <sql id="selectPayingUserVo">
-        select id, phone, last_login_ip, last_login_time, name, sex, birth_year, zodiac,
-               height, weight, hometown, current_city, education, occupation, monthly_income,
-               family_members, has_car, has_house, house_desc, hobbies, advantages,
-               smoke_habit, drink_habit, has_tattoo, accept_long_dist, photos,
-               status, del_flag, remark, create_by, create_time, update_by, update_time
-        from sys_paying_user
+        select u.id, u.phone, u.last_login_ip, u.last_login_time, u.name, u.sex, u.birth_year, u.zodiac,
+               u.height, u.weight, u.hometown, u.current_city, u.education, u.occupation, u.monthly_income,
+               u.family_members, u.has_car, u.has_house, u.house_desc, u.hobbies, u.advantages,
+               u.smoke_habit, u.drink_habit, u.has_tattoo, u.accept_long_dist, u.photos,
+               u.status, u.del_flag, u.remark, u.create_by, u.create_time, u.update_by, u.update_time,
+               r.id               as req_id,
+               r.paying_id        as req_paying_id,
+               r.age_min          as req_age_min,
+               r.age_max          as req_age_max,
+               r.hometown_require as req_hometown_require,
+               r.city_require     as req_city_require,
+               r.education        as req_education,
+               r.height_min       as req_height_min,
+               r.height_max       as req_height_max,
+               r.no_tattoo        as req_no_tattoo,
+               r.accept_long_dist as req_accept_long_dist,
+               r.smoke_habit      as req_smoke_habit,
+               r.drink_habit      as req_drink_habit,
+               r.has_car          as req_has_car,
+               r.has_house        as req_has_house,
+               r.other_require    as req_other_require
+        from sys_paying_user u
+        left join sys_paying_requirement r on r.paying_id = u.id
     </sql>
 
     <select id="selectPayingUserList"  parameterType="SysPayingUser" resultMap="SysPayingUserResult">
         <include refid="selectPayingUserVo"/>
         <where>
-            and del_flag = '0'
+            and u.del_flag = '0'
             <if test="phone != null and phone != ''">
-                and phone like concat('%', #{phone}, '%')
+                and u.phone like concat('%', #{phone}, '%')
             </if>
             <if test="name != null and name != ''">
-                and name like concat('%', #{name}, '%')
+                and u.name like concat('%', #{name}, '%')
             </if>
             <if test="currentCity != null and currentCity != ''">
-                and current_city like concat('%', #{currentCity}, '%')
+                and u.current_city like concat('%', #{currentCity}, '%')
             </if>
             <if test="status != null and status != ''">
-                and status = #{status}
+                and u.status = #{status}
             </if>
-            <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
-                and date_format(create_time,'%Y%m%d') &gt;= date_format(#{params.beginTime},'%Y%m%d')
+            <if test="params.beginTime != null and params.beginTime != ''"><!-- ????????? -->
+                and date_format(u.create_time,'%Y%m%d') &gt;= date_format(#{params.beginTime},'%Y%m%d')
             </if>
-            <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
-                and date_format(create_time,'%Y%m%d') &lt;= date_format(#{params.endTime},'%Y%m%d')
+            <if test="params.endTime != null and params.endTime != ''"><!-- ?????????? -->
+                and date_format(u.create_time,'%Y%m%d') &lt;= date_format(#{params.endTime},'%Y%m%d')
             </if>
         </where>
     </select>
 
     <select id="selectPayingUserById" parameterType="Long" resultMap="SysPayingUserResult">
         <include refid="selectPayingUserVo"/>
-        where id = #{id}
+        where u.id = #{id}
     </select>
 
     <select id="checkPhoneUnique" parameterType="String" resultMap="SysPayingUserResult">
         <include refid="selectPayingUserVo"/>
-        where phone = #{phone} and del_flag = '0' limit 1
+        where u.phone = #{phone} and u.del_flag = '0' limit 1
     </select>
 
     <update id="updatePayingUser" parameterType="SysPayingUser">
