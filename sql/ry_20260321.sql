@@ -465,7 +465,7 @@ create table sys_dict_type
 ) engine=innodb auto_increment=100 comment = '字典类型表';
 
 insert into sys_dict_type values(1,  '用户性别', 'sys_user_sex',        '0', 'admin', sysdate(), '', null, '用户性别列表');
-insert into sys_dict_type values(2,  '菜单状态', 'sys_show_hide',       '0', 'admin', sysdate(), '', null, '菜单状态列表');
+insert into sys_dict_type values(2,  '用户学历', 'sys_user_education',  '0', 'admin', sysdate(), '', null, '用户学历列表');
 insert into sys_dict_type values(3,  '系统开关', 'sys_normal_disable',  '0', 'admin', sysdate(), '', null, '系统开关列表');
 insert into sys_dict_type values(4,  '任务状态', 'sys_job_status',      '0', 'admin', sysdate(), '', null, '任务状态列表');
 insert into sys_dict_type values(5,  '任务分组', 'sys_job_group',       '0', 'admin', sysdate(), '', null, '任务分组列表');
@@ -474,6 +474,8 @@ insert into sys_dict_type values(7,  '通知类型', 'sys_notice_type',     '0',
 insert into sys_dict_type values(8,  '通知状态', 'sys_notice_status',   '0', 'admin', sysdate(), '', null, '通知状态列表');
 insert into sys_dict_type values(9,  '操作类型', 'sys_oper_type',       '0', 'admin', sysdate(), '', null, '操作类型列表');
 insert into sys_dict_type values(10, '系统状态', 'sys_common_status',   '0', 'admin', sysdate(), '', null, '登录状态列表');
+insert into sys_dict_type values(11,  '菜单状态', 'sys_show_hide',       '0', 'admin', sysdate(), '', null, '菜单状态列表');
+
 
 
 -- ----------------------------
@@ -501,7 +503,6 @@ create table sys_dict_data
 
 insert into sys_dict_data values(1,  1,  '男',       '0',       'sys_user_sex',        '',   '',        'Y', '0', 'admin', sysdate(), '', null, '性别男');
 insert into sys_dict_data values(2,  2,  '女',       '1',       'sys_user_sex',        '',   '',        'N', '0', 'admin', sysdate(), '', null, '性别女');
-insert into sys_dict_data values(3,  3,  '未知',     '2',       'sys_user_sex',        '',   '',        'N', '0', 'admin', sysdate(), '', null, '性别未知');
 insert into sys_dict_data values(4,  1,  '显示',     '0',       'sys_show_hide',       '',   'primary', 'Y', '0', 'admin', sysdate(), '', null, '显示菜单');
 insert into sys_dict_data values(5,  2,  '隐藏',     '1',       'sys_show_hide',       '',   'danger',  'N', '0', 'admin', sysdate(), '', null, '隐藏菜单');
 insert into sys_dict_data values(6,  1,  '正常',     '0',       'sys_normal_disable',  '',   'primary', 'Y', '0', 'admin', sysdate(), '', null, '正常状态');
@@ -528,6 +529,15 @@ insert into sys_dict_data values(26, 8,  '生成代码', '8',       'sys_oper_ty
 insert into sys_dict_data values(27, 9,  '清空数据', '9',       'sys_oper_type',       '',   'danger',  'N', '0', 'admin', sysdate(), '', null, '清空操作');
 insert into sys_dict_data values(28, 1,  '成功',     '0',       'sys_common_status',   '',   'primary', 'N', '0', 'admin', sysdate(), '', null, '正常状态');
 insert into sys_dict_data values(29, 2,  '失败',     '1',       'sys_common_status',   '',   'danger',  'N', '0', 'admin', sysdate(), '', null, '停用状态');
+insert into sys_dict_data values(30, 1,  '无',       '0',       'sys_user_education',  '',   '',        'Y', '0', 'admin', sysdate(), '', null, '无学历');
+insert into sys_dict_data values(31, 2,  '小学',       '1',       'sys_user_education',  '',   '',        'N', '0', 'admin', sysdate(), '', null, '小学学历');
+insert into sys_dict_data values(32, 3,  '初中',       '2',       'sys_user_education',  '',   '',        'N', '0', 'admin', sysdate(), '', null, '初中学历');
+insert into sys_dict_data values(33, 4,  '高中',       '3',       'sys_user_education',  '',   '',        'N', '0', 'admin', sysdate(), '', null, '高中学历');
+insert into sys_dict_data values(34, 5,  '大专',       '4',       'sys_user_education',  '',   '',        'N', '0', 'admin', sysdate(), '', null, '大专学历');
+insert into sys_dict_data values(35, 6,  '本科',       '5',       'sys_user_education',  '',   '',        'N', '0', 'admin', sysdate(), '', null, '本科学历');
+insert into sys_dict_data values(36, 7,  '硕士',       '6',       'sys_user_education',  '',   '',        'N', '0', 'admin', sysdate(), '', null, '硕士学历');
+insert into sys_dict_data values(37, 8,  '博士',       '7',       'sys_user_education',  '',   '',        'N', '0', 'admin', sysdate(), '', null, '博士学历');
+insert into sys_dict_data values(38, 9,  '博士后',     '8',       'sys_user_education',  '',   '',        'N', '0', 'admin', sysdate(), '', null, '博士后学历');
 
 
 -- ----------------------------
