@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.ruoyi.common.constant.UserConstants;
+import com.ruoyi.common.core.domain.entity.SysPayingRequirement;
 import com.ruoyi.common.core.domain.entity.SysPayingUser;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
@@ -45,6 +46,18 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
     public List<SysPayingUser> selectPayingUserList(SysPayingUser user)
     {
         return payingUserMapper.selectPayingUserList(user);
+    }
+
+    /**
+     * 根据择偶要求搜索用户（用于匹配列表）
+     *
+     * @param requirement 择偶要求
+     * @return 用户列表
+     */
+    @Override
+    public List<SysPayingUser> selectPayingUserListByRequirement(SysPayingRequirement requirement)
+    {
+        return payingUserMapper.selectPayingUserListByRequirement(requirement);
     }
 
     /**

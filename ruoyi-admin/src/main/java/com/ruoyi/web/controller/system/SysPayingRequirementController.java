@@ -1,4 +1,5 @@
 package com.ruoyi.web.controller.system;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -12,8 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.core.domain.entity.SysPayingRequirement;
+import com.ruoyi.common.core.domain.entity.SysPayingUser;
+import com.ruoyi.system.service.ISysPayingUserService;
 import com.ruoyi.system.service.ISysPayingRequirementService;
 /**
  * 档案-要求 CRUD
@@ -25,6 +29,8 @@ public class SysPayingRequirementController extends BaseController
 {
     @Autowired
     private ISysPayingRequirementService requirementService;
+    @Autowired
+    private ISysPayingUserService payingUserService;
     /**
      * 根据 payingId 查询要求信息
      */
@@ -55,5 +61,18 @@ public class SysPayingRequirementController extends BaseController
     {
         requirement.setUpdateBy(getUsername());
         return toAjax(requirementService.updateRequirement(requirement));
+    }
+
+
+    /**
+     * 根据要求信息搜索sys_paying_user表中的用户列表
+     */
+    @PreAuthorize("@ss.hasPermi('system:payingRequirement:search')")
+    @PostMapping("/search")
+    public TableDataInfo search(@RequestBody SysPayingRequirement requirement)
+    {
+        startPage();
+        List<SysPayingUser> list = payingUserService.selectPayingUserListByRequirement(requirement);
+        return getDataTable(list);
     }
 }

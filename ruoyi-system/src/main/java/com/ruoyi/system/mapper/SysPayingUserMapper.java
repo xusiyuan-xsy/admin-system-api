@@ -1,6 +1,7 @@
 package com.ruoyi.system.mapper;
 
 import java.util.List;
+import com.ruoyi.common.core.domain.entity.SysPayingRequirement;
 import com.ruoyi.common.core.domain.entity.SysPayingUser;
 
 /**
@@ -12,6 +13,11 @@ public interface SysPayingUserMapper
      * 根据条件分页查询用户列表
      */
     public List<SysPayingUser> selectPayingUserList(SysPayingUser user);
+
+    /**
+     * 根据择偶要求搜索用户（用于匹配列表）
+     */
+    public List<SysPayingUser> selectPayingUserListByRequirement(SysPayingRequirement requirement);
 
     /**
      * 校验手机号是否唯一

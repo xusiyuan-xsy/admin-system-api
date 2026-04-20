@@ -110,6 +110,66 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </where>
     </select>
 
+    <select id="selectPayingUserListByRequirement" parameterType="SysPayingRequirement" resultMap="SysPayingUserResult">
+        select u.id, u.name, u.sex, u.birth_year, u.height, u.hometown, u.current_city, u.education,
+               u.smoke_habit, u.drink_habit, u.has_car, u.has_house, u.has_tattoo, u.accept_long_dist,
+               u.photos, u.status, u.del_flag, u.create_time, u.update_time
+        from sys_paying_user u
+        <where>
+            u.del_flag = '0'
+            and u.status = '0'
+            <if test="payingId != null">
+                and u.id != #{payingId}
+                and u.sex != (select p.sex from sys_paying_user p where p.id = #{payingId} and p.del_flag = '0' limit 1)
+            </if>
+            <if test="ageMin != null and ageMax != null">
+                and u.birth_year between #{ageMin} and #{ageMax}
+            </if>
+            <if test="ageMin != null and ageMax == null">
+                and u.birth_year &gt;= #{ageMin}
+            </if>
+            <if test="ageMin == null and ageMax != null">
+                and u.birth_year &lt;= #{ageMax}
+            </if>
+            <if test="heightMin != null and heightMax != null">
+                and u.height between #{heightMin} and #{heightMax}
+            </if>
+            <if test="heightMin != null and heightMax == null">
+                and u.height &gt;= #{heightMin}
+            </if>
+            <if test="heightMin == null and heightMax != null">
+                and u.height &lt;= #{heightMax}
+            </if>
+            <if test="education != null and education != ''">
+                and cast(u.education as unsigned) &gt;= cast(#{education} as unsigned)
+            </if>
+            <if test="smokeHabit != null and smokeHabit != ''">
+                and cast(u.smoke_habit as unsigned) &lt;= cast(#{smokeHabit} as unsigned)
+            </if>
+            <if test="drinkHabit != null and drinkHabit != ''">
+                and cast(u.drink_habit as unsigned) &lt;= cast(#{drinkHabit} as unsigned)
+            </if>
+            <if test="hasCar != null and hasCar != ''">
+                and u.has_car = #{hasCar}
+            </if>
+            <if test="hasHouse != null and hasHouse != ''">
+                and u.has_house = #{hasHouse}
+            </if>
+            <if test="acceptLongDist != null and acceptLongDist != ''">
+                and u.accept_long_dist = #{acceptLongDist}
+            </if>
+            <if test="noTattoo != null and noTattoo == '1'">
+                and u.has_tattoo = '0'
+            </if>
+            <if test="cityRequire != null and cityRequire != ''">
+                and u.current_city like concat('%', #{cityRequire}, '%')
+            </if>
+            <if test="hometownRequire != null and hometownRequire != ''">
+                and u.hometown like concat('%', #{hometownRequire}, '%')
+            </if>
+        </where>
+    </select>
+
     <select id="selectPayingUserById" parameterType="Long" resultMap="SysPayingUserResult">
         <include refid="selectPayingUserVo"/>
         where u.id = #{id}
