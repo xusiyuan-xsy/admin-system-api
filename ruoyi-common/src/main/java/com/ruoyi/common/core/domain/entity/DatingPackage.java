@@ -48,6 +48,9 @@ public class DatingPackage extends BaseEntity
     /** Ì×²Í×´Ì¬£¨0ÏÂ¼Ü 1ÉÏ¼Ü£© */
     private String status;
 
+    /** É¾³ý±êÖ¾£¨0´æÔÚ 2É¾³ý£© */
+    private String delFlag;
+
     public Long getPackageId() { return packageId; }
     public void setPackageId(Long packageId) { this.packageId = packageId; }
 
@@ -83,4 +86,7 @@ public class DatingPackage extends BaseEntity
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getDelFlag() { return delFlag; }
+    public void setDelFlag(String delFlag) { this.delFlag = delFlag; }
 }

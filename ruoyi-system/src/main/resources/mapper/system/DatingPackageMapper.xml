@@ -17,6 +17,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="coverImage"         column="cover_image"         />
         <result property="sortOrder"          column="sort_order"          />
         <result property="status"             column="status"              />
+        <result property="delFlag"            column="del_flag"            />
         <result property="createBy"           column="create_by"           />
         <result property="createTime"         column="create_time"         />
         <result property="updateBy"           column="update_by"           />
@@ -26,7 +27,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <sql id="selectDatingPackageVo">
         select package_id, package_name, package_type, price,
                limit_expire, service_duration, limit_service_times, service_times,
-               description, cover_image, sort_order, status,
+               description, cover_image, sort_order, status, del_flag,
                create_by, create_time, update_by, update_time
         from dating_package
     </sql>
@@ -34,6 +35,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectDatingPackageList" parameterType="DatingPackage" resultMap="DatingPackageResult">
         <include refid="selectDatingPackageVo"/>
         <where>
+            and del_flag = '0'
             <if test="packageName != null and packageName != ''">
                 and package_name like concat('%', #{packageName}, '%')
             </if>
@@ -43,13 +45,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null and status != ''">
                 and status = #{status}
             </if>
+            <if test="params != null and params.beginTime != null and params.beginTime != ''">
+                and create_time &gt;= #{params.beginTime}
+            </if>
+            <if test="params != null and params.endTime != null and params.endTime != ''">
+                and create_time &lt;= #{params.endTime}
+            </if>
+           
         </where>
         order by sort_order asc, create_time desc
     </select>
 
     <select id="selectDatingPackageById" parameterType="Long" resultMap="DatingPackageResult">
         <include refid="selectDatingPackageVo"/>
-        where package_id = #{packageId}
+        where package_id = #{packageId} and del_flag = '0'
     </select>
 
     <insert id="insertDatingPackage" parameterType="DatingPackage" useGeneratedKeys="true" keyProperty="packageId">
@@ -106,15 +115,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where package_id = #{packageId}
     </update>
 
-    <delete id="deleteDatingPackageById" parameterType="Long">
-        delete from dating_package where package_id = #{packageId}
-    </delete>
+    <update id="deleteDatingPackageById" parameterType="Long">
+        update dating_package
+        set del_flag = '2', update_time = sysdate()
+        where package_id = #{packageId} and del_flag = '0'
+    </update>
 
-    <delete id="deleteDatingPackageByIds" parameterType="Long">
-        delete from dating_package where package_id in
+    <update id="deleteDatingPackageByIds" parameterType="Long">
+        update dating_package
+        set del_flag = '2', update_time = sysdate()
+        where package_id in
         <foreach collection="array" item="packageId" open="(" separator="," close=")">
             #{packageId}
         </foreach>
-    </delete>
+        and del_flag = '0'
+    </update>
 
 </mapper>

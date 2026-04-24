@@ -12,6 +12,7 @@ create table dating_package (
     cover_image       varchar(255)    default ''                           comment '套餐封面',
     sort_order        int(4)          not null default 0                   comment '排序权重(越小越靠前)',
     status            char(1)         not null default '0'                 comment '套餐状态（0下架 1上架）',
+    del_flag          char(1)         not null default '0'                 comment '删除标志（0存在 2删除）',
     create_by         varchar(64)     not null default ''                  comment '创建者',
     create_time       datetime        not null                             comment '创建时间',
     update_by         varchar(64)     not null default ''                  comment '更新者',
