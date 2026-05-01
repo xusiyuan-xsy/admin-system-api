@@ -1,5 +1,6 @@
 package com.ruoyi.system.service.impl;
 
+import java.util.Collections;
 import java.util.List;
 import jakarta.validation.Validator;
 import org.slf4j.Logger;
@@ -17,6 +18,8 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.system.service.ISysConfigService;
 import com.ruoyi.system.mapper.SysPayingUserMapper;
+import com.ruoyi.system.domain.vo.SysPayingUserBirthYearStatVo;
+import com.ruoyi.system.domain.vo.SysPayingUserStatsVo;
 import com.ruoyi.system.service.ISysPayingUserService;
 
 /**
@@ -46,6 +49,19 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
     public List<SysPayingUser> selectPayingUserList(SysPayingUser user)
     {
         return payingUserMapper.selectPayingUserList(user);
+    }
+
+    @Override
+    public SysPayingUserStatsVo selectPayingUserStats()
+    {
+        SysPayingUserStatsVo vo = payingUserMapper.selectPayingUserStatsOverview();
+        if (vo == null)
+        {
+            vo = new SysPayingUserStatsVo();
+        }
+        List<SysPayingUserBirthYearStatVo> byYear = payingUserMapper.selectPayingUserBirthYearStats();
+        vo.setBirthYearStats(byYear != null ? byYear : Collections.emptyList());
+        return vo;
     }
 
     /**

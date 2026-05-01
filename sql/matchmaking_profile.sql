@@ -63,8 +63,8 @@ insert into sys_paying_user (
   status, del_flag, create_by, create_time
 ) values (
   '13800000000', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIbDr9G',
-  '0', 2000, '虎', 170, 100,
-  '汕头潮南', '深圳',
+  '0', 2000, '虎', 180, 100,
+  '汕头', '深圳',
   '0', '跨境电商', 20000.00,
   '父母、哥哥、姐姐',
   '0', '0', '商品房',

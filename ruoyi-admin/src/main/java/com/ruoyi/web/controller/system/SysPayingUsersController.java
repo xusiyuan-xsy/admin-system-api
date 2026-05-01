@@ -38,7 +38,17 @@ public class SysPayingUsersController extends BaseController
     private ISysPayingUserService payingUserService;
 
 
-     /**
+    /**
+     * Paying user stats: del_flag=0 count, status breakdown, sex totals, birth-year breakdown.
+     */
+    @PreAuthorize("@ss.hasPermi('system:payingUsers:list')")
+    @GetMapping("/stats")
+    public AjaxResult stats()
+    {
+        return success(payingUserService.selectPayingUserStats());
+    }
+
+    /**
      * 获取用户列表
      */
     @PreAuthorize("@ss.hasPermi('system:payingUsers:list')")

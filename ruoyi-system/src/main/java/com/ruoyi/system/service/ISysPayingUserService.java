@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import com.ruoyi.common.core.domain.entity.SysPayingRequirement;
 import com.ruoyi.common.core.domain.entity.SysPayingUser;
+import com.ruoyi.system.domain.vo.SysPayingUserStatsVo;
 
 /**
  * 相亲档案 业务层
@@ -14,6 +15,11 @@ public interface ISysPayingUserService
      * 根据条件分页查询用户列表
      */
     public List<SysPayingUser> selectPayingUserList(SysPayingUser user);
+
+    /**
+     * 付费用户汇总统计（del_flag=0 为有效用户；status/性别/出生年份均在该范围内统计）
+     */
+    public SysPayingUserStatsVo selectPayingUserStats();
 
     /**
      * 根据择偶要求搜索用户（用于匹配列表）
