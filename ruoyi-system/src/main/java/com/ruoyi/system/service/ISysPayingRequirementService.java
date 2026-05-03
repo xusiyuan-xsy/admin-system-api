@@ -3,31 +3,31 @@ package com.ruoyi.system.service;
 import com.ruoyi.common.core.domain.entity.SysPayingRequirement;
 
 /**
- * µµ°¸-ÒªÇó ÒµÎñ²ã
+ * æ¡£æ¡ˆ-è¦æ±‚ ä¸šåŠ¡å±‚
  */
 public interface ISysPayingRequirementService
 {
     /**
-     * ¸ù¾İ payingId ²éÑ¯ÒªÇóĞÅÏ¢
+     * æ ¹æ® payingId æŸ¥è¯¢è¦æ±‚ä¿¡æ¯
      *
-     * @param payingId µµ°¸ID
-     * @return ÒªÇóĞÅÏ¢
+     * @param payingId æ¡£æ¡ˆID
+     * @return è¦æ±‚ä¿¡æ¯
      */
     SysPayingRequirement selectRequirementByPayingId(Long payingId);
 
     /**
-     * ĞÂÔöÒªÇóĞÅÏ¢
+     * æ–°å¢è¦æ±‚ä¿¡æ¯
      *
-     * @param requirement ÒªÇóĞÅÏ¢
-     * @return ½á¹û
+     * @param requirement è¦æ±‚ä¿¡æ¯
+     * @return ç»“æœ
      */
     int insertRequirement(SysPayingRequirement requirement);
 
     /**
-     * ĞŞ¸ÄÒªÇóĞÅÏ¢£¨°´ payingId ¸üĞÂ£©
+     * ä¿®æ”¹è¦æ±‚ä¿¡æ¯ï¼ˆæŒ‰ payingId æ›´æ–°ï¼‰
      *
-     * @param requirement ÒªÇóĞÅÏ¢
-     * @return ½á¹û
+     * @param requirement è¦æ±‚ä¿¡æ¯
+     * @return ç»“æœ
      */
     int updateRequirement(SysPayingRequirement requirement);
 }

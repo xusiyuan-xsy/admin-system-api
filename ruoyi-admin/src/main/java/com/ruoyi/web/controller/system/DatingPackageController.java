@@ -21,8 +21,8 @@ import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.system.service.IDatingPackageService;
 
 /**
- * Ì×²Í¹ÜÀí
- * Â·ÓÉÇ°×º£º/system/datingPackage
+ * å¥—é¤ç®¡ç†
+ * è·¯ç”±å‰ç¼€ï¼š/system/datingPackage
  */
 @RestController
 @RequestMapping("/system/datingPackage")
@@ -32,8 +32,8 @@ public class DatingPackageController extends BaseController
     private IDatingPackageService datingPackageService;
 
     /**
-     * ²éÑ¯Ì×²ÍÁĞ±í£¨·ÖÒ³£©
-     * Ö§³ÖÉ¸Ñ¡£ºpackageName¡¢packageType¡¢status
+     * æŸ¥è¯¢å¥—é¤åˆ—è¡¨ï¼ˆåˆ†é¡µï¼‰
+     * æ”¯æŒç­›é€‰ï¼špackageNameã€packageTypeã€status
      */
     @PreAuthorize("@ss.hasPermi('system:datingPackage:list')")
     @GetMapping("/list")
@@ -45,7 +45,7 @@ public class DatingPackageController extends BaseController
     }
 
     /**
-     * ¸ù¾İÌ×²ÍID²éÑ¯Ì×²ÍÏêÇé
+     * æ ¹æ®å¥—é¤IDæŸ¥è¯¢å¥—é¤è¯¦æƒ…
      */
     @PreAuthorize("@ss.hasPermi('system:datingPackage:query')")
     @GetMapping("/{packageId}")
@@ -55,10 +55,10 @@ public class DatingPackageController extends BaseController
     }
 
     /**
-     * ĞÂÔöÌ×²Í
+     * æ–°å¢å¥—é¤
      */
     @PreAuthorize("@ss.hasPermi('system:datingPackage:add')")
-    @Log(title = "Ì×²Í¹ÜÀí", businessType = BusinessType.INSERT)
+    @Log(title = "å¥—é¤ç®¡ç†", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@Validated @RequestBody DatingPackage datingPackage)
     {
@@ -67,10 +67,10 @@ public class DatingPackageController extends BaseController
     }
 
     /**
-     * ĞŞ¸ÄÌ×²Í
+     * ä¿®æ”¹å¥—é¤
      */
     @PreAuthorize("@ss.hasPermi('system:datingPackage:edit')")
-    @Log(title = "Ì×²Í¹ÜÀí", businessType = BusinessType.UPDATE)
+    @Log(title = "å¥—é¤ç®¡ç†", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@Validated @RequestBody DatingPackage datingPackage)
     {
@@ -79,10 +79,10 @@ public class DatingPackageController extends BaseController
     }
 
     /**
-     * É¾³ıÌ×²Í£¨µ¥¸ö»òÅúÁ¿£©
+     * åˆ é™¤å¥—é¤ï¼ˆå•ä¸ªæˆ–æ‰¹é‡ï¼‰
      */
     @PreAuthorize("@ss.hasPermi('system:datingPackage:remove')")
-    @Log(title = "Ì×²Í¹ÜÀí", businessType = BusinessType.DELETE)
+    @Log(title = "å¥—é¤ç®¡ç†", businessType = BusinessType.DELETE)
     @DeleteMapping("/{packageIds}")
     public AjaxResult remove(@PathVariable Long[] packageIds)
     {

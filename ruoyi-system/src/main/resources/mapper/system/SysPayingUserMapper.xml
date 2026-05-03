@@ -150,18 +150,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 and cast(u.drink_habit as unsigned) &lt;= cast(#{drinkHabit} as unsigned)
             </if>
             <if test="hasCar != null and hasCar != ''">
-                and u.has_car = #{hasCar}
+                and cast(u.has_car as unsigned) &gt;= cast(#{hasCar} as unsigned)
             </if>
             <if test="hasHouse != null and hasHouse != ''">
-                and u.has_house = #{hasHouse}
+                and cast(u.has_house as unsigned) &gt;= cast(#{hasHouse} as unsigned)
             </if>
-            <if test="acceptLongDist != null and acceptLongDist != ''">
-                and u.accept_long_dist = #{acceptLongDist}
+            <!-- <if test="acceptLongDist != null and acceptLongDist != ''">
+                and cast(u.accept_long_dist as unsigned) &lt;= cast(#{acceptLongDist} as unsigned)
+            </if> -->
+            <if test="noTattoo != null and noTattoo != ''">
+                and cast(u.has_tattoo as unsigned) &lt;= cast(#{noTattoo} as unsigned)
             </if>
-            <if test="noTattoo != null and noTattoo == '1'">
-                and u.has_tattoo = '0'
-            </if>
-            <if test="cityRequire != null and cityRequire != ''">
+            <!-- 如果接受1异地，则不限制城市 -->
+            <if test="cityRequire != null and cityRequire != '' and acceptLongDist == '0'">
                 and u.current_city like concat('%', #{cityRequire}, '%')
             </if>
             <if test="hometownRequire != null and hometownRequire != ''">
