@@ -27,10 +27,8 @@
         <oshi.version>6.10.0</oshi.version>
         <commons.io.version>2.21.0</commons.io.version>
         <poi.version>4.1.2</poi.version>
-        <velocity.version>2.3</velocity.version>
         <jwt.version>0.9.1</jwt.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
-        <springdoc.version>3.0.2</springdoc.version>
     </properties>
 
     <!-- 依赖声明 -->
@@ -86,13 +84,6 @@
                 <version>${oshi.version}</version>
             </dependency>
 
-            <!-- spring-doc -->
-            <dependency>
-                <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-                <version>${springdoc.version}</version>
-            </dependency>
-
             <!-- io常用工具类 -->
             <dependency>
                 <groupId>commons-io</groupId>
@@ -105,13 +96,6 @@
                 <groupId>org.apache.poi</groupId>
                 <artifactId>poi-ooxml</artifactId>
                 <version>${poi.version}</version>
-            </dependency>
-
-            <!-- velocity代码生成使用模板 -->
-            <dependency>
-                <groupId>org.apache.velocity</groupId>
-                <artifactId>velocity-engine-core</artifactId>
-                <version>${velocity.version}</version>
             </dependency>
 
             <!-- 阿里JSON解析器 -->
@@ -139,13 +123,6 @@
             <dependency>
                 <groupId>com.ruoyi</groupId>
                 <artifactId>ruoyi-quartz</artifactId>
-                <version>${ruoyi.version}</version>
-            </dependency>
-
-            <!-- 代码生成-->
-            <dependency>
-                <groupId>com.ruoyi</groupId>
-                <artifactId>ruoyi-generator</artifactId>
                 <version>${ruoyi.version}</version>
             </dependency>
 
@@ -178,7 +155,6 @@
         <module>ruoyi-framework</module>
         <module>ruoyi-system</module>
         <module>ruoyi-quartz</module>
-        <module>ruoyi-generator</module>
         <module>ruoyi-common</module>
     </modules>
     <packaging>pom</packaging>

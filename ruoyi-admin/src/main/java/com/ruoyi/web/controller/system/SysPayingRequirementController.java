@@ -16,8 +16,9 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.core.domain.entity.SysPayingRequirement;
-import com.ruoyi.common.core.domain.entity.SysPayingUser;
-import com.ruoyi.system.service.ISysPayingUserService;
+import com.ruoyi.system.domain.dto.DatingMatchSearch;
+import com.ruoyi.system.domain.vo.DatingMatchCandidate;
+import com.ruoyi.system.service.DatingMatchingService;
 import com.ruoyi.system.service.ISysPayingRequirementService;
 /**
  * 档案-要求 CRUD
@@ -30,7 +31,7 @@ public class SysPayingRequirementController extends BaseController
     @Autowired
     private ISysPayingRequirementService requirementService;
     @Autowired
-    private ISysPayingUserService payingUserService;
+    private DatingMatchingService matchingService;
     /**
      * 根据 payingId 查询要求信息
      */
@@ -69,10 +70,17 @@ public class SysPayingRequirementController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('system:payingRequirement:search')")
     @PostMapping("/search")
-    public TableDataInfo search(@RequestBody SysPayingRequirement requirement)
+    public TableDataInfo search(@RequestBody DatingMatchSearch requirement)
     {
         startPage();
-        List<SysPayingUser> list = payingUserService.selectPayingUserListByRequirement(requirement);
-        return getDataTable(list);
+        try
+        {
+            List<DatingMatchCandidate> list = matchingService.search(requirement);
+            return getDataTable(list);
+        }
+        finally
+        {
+            clearPage();
+        }
     }
 }

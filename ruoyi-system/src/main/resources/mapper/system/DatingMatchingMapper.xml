@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.DatingMatchingMapper">
+    <resultMap id="candidate" type="com.ruoyi.system.domain.vo.DatingMatchCandidate"
+               extends="com.ruoyi.system.mapper.SysPayingUserMapper.SysPayingUserResult">
+        <result property="serviceEligible" column="service_eligible"/>
+        <result property="sourceEligible" column="source_eligible"/>
+        <result property="reverseMatched" column="reverse_matched"/>
+        <result property="matchmakerName" column="matchmaker_name"/>
+        <result property="pairId" column="pair_id"/>
+        <result property="pairProgress" column="pair_progress"/>
+        <association property="sourceArchive" javaType="com.ruoyi.common.core.domain.entity.SysPayingUser">
+            <id property="id" column="source_id"/>
+            <result property="birthYear" column="source_birth_year"/>
+            <result property="height" column="source_height"/>
+            <result property="education" column="source_education"/>
+            <result property="currentCity" column="source_current_city"/>
+            <result property="hometown" column="source_hometown"/>
+            <result property="hasCar" column="source_has_car"/>
+            <result property="hasHouse" column="source_has_house"/>
+            <result property="hasTattoo" column="source_has_tattoo"/>
+            <result property="smokeHabit" column="source_smoke_habit"/>
+            <result property="drinkHabit" column="source_drink_habit"/>
+        </association>
+    </resultMap>
+
+    <!-- Aliases are static include properties, never request-supplied identifiers. -->
+    <sql id="eligible">
+        ${customer}.status='0' and ${customer}.del_flag='0' and ${customer}.service_status='SERVING'
+        and ${staff}.status='0' and ${staff}.del_flag='0'
+        and (select count(*) from dating_entitlement e
+             where e.user_id=${customer}.id and e.status='ACTIVE')=1
+        and exists(select 1 from dating_entitlement e join dating_order o on o.order_id=e.order_id
+            where e.user_id=${customer}.id and o.user_id=${customer}.id
+            and e.status='ACTIVE' and e.remaining_times&gt;0 and o.status='PAID')
+    </sql>
+
+    <sql id="reverse">
+        r.id is not null
+        and (r.age_min is null or (r.age_min between 1900 and year(current_date) and p.birth_year&gt;=r.age_min))
+        and (r.age_max is null or (r.age_max between 1900 and year(current_date) and p.birth_year&lt;=r.age_max))
+        and (r.age_min is null or r.age_max is null or r.age_min&lt;=r.age_max)
+        and (r.height_min is null or (r.height_min between 100 and 250 and p.height&gt;=r.height_min))
+        and (r.height_max is null or (r.height_max between 100 and 250 and p.height&lt;=r.height_max))
+        and (r.height_min is null or r.height_max is null or r.height_min&lt;=r.height_max)
+        and (coalesce(r.education,'') in ('','0') or
+            (r.education in ('1','2','3','4','5','6','7','8')
+             and p.education in ('1','2','3','4','5','6','7','8') and p.education&gt;=r.education))
+        and (coalesce(r.smoke_habit,'')='' or
+            (r.smoke_habit in ('0','1','2') and p.smoke_habit in ('0','1','2') and p.smoke_habit&lt;=r.smoke_habit))
+        and (coalesce(r.drink_habit,'')='' or
+            (r.drink_habit in ('0','1','2') and p.drink_habit in ('0','1','2') and p.drink_habit&lt;=r.drink_habit))
+        and (coalesce(r.has_car,'') in ('','0') or (r.has_car='1' and p.has_car='1'))
+        and (coalesce(r.has_house,'') in ('','0') or (r.has_house='1' and p.has_house='1'))
+        and (coalesce(r.no_tattoo,'') in ('','0') or (r.no_tattoo='1' and p.has_tattoo='0'))
+        and (coalesce(r.accept_long_dist,'') in ('','1') or
+            (r.accept_long_dist='0' and length(trim(r.city_require))&gt;0 and
+             (p.current_city=r.city_require or left(p.current_city,char_length(r.city_require)+1)=concat(r.city_require,'/'))))
+        and (coalesce(trim(r.hometown_require),'')='' or
+            p.hometown=r.hometown_require or left(p.hometown,char_length(r.hometown_require)+1)=concat(r.hometown_require,'/'))
+    </sql>
+
+    <select id="search" resultMap="candidate">
+        select u.id,u.name,u.phone,u.sex,u.birth_year,u.height,u.hometown,u.current_city,u.education,
+            u.occupation,u.monthly_income,u.family_members,u.hobbies,u.advantages,
+            u.has_car,u.has_house,u.has_tattoo,u.smoke_habit,u.drink_habit,u.accept_long_dist,
+            u.photos,u.status,u.service_status,u.del_flag,u.create_time,
+            coalesce(s.nick_name,s.user_name,u.create_by) as matchmaker_name,
+            dp.pair_id,dp.progress as pair_progress,
+            case when <include refid="eligible"><property name="customer" value="u"/><property name="staff" value="s"/></include>
+                then 1 else 0 end as service_eligible,
+            case when <include refid="eligible"><property name="customer" value="p"/><property name="staff" value="ps"/></include>
+                then 1 else 0 end as source_eligible,
+            case when <include refid="reverse"/> then 1 else 0 end as reverse_matched,
+            p.id as source_id,p.birth_year as source_birth_year,p.height as source_height,
+            p.education as source_education,p.current_city as source_current_city,p.hometown as source_hometown,
+            p.has_car as source_has_car,p.has_house as source_has_house,p.has_tattoo as source_has_tattoo,
+            p.smoke_habit as source_smoke_habit,p.drink_habit as source_drink_habit,
+            r.id as req_id,r.paying_id as req_paying_id,r.age_min as req_age_min,r.age_max as req_age_max,
+            r.height_min as req_height_min,r.height_max as req_height_max,r.education as req_education,
+            r.hometown_require as req_hometown_require,r.city_require as req_city_require,
+            r.has_car as req_has_car,r.has_house as req_has_house,r.no_tattoo as req_no_tattoo,
+            r.smoke_habit as req_smoke_habit,r.drink_habit as req_drink_habit,
+            r.accept_long_dist as req_accept_long_dist,r.other_require as req_other_require
+        from sys_paying_user u
+        join sys_paying_user p on p.id=#{payingId} and p.id!=u.id and p.sex!=u.sex
+        left join sys_user s on s.user_id=u.matchmaker_id
+        left join sys_user ps on ps.user_id=p.matchmaker_id
+        left join sys_paying_requirement r on r.paying_id=u.id and r.id=(
+            select max(latest.id) from sys_paying_requirement latest where latest.paying_id=u.id)
+        left join dating_pair dp on dp.user_low_id=least(u.id,p.id) and dp.user_high_id=greatest(u.id,p.id)
+        where u.status='0' and u.del_flag='0' and u.sex in ('0','1')
+            and p.status='0' and p.del_flag='0' and p.sex in ('0','1')
+        <include refid="com.ruoyi.system.mapper.SysPayingUserMapper.archiveScope"/>
+        <if test="params.archiveOwner != null">
+            and (case when p.matchmaker_id is null then p.create_by else ps.user_name end)=#{params.archiveOwner}
+        </if>
+        <include refid="com.ruoyi.system.mapper.SysPayingUserMapper.requirementFilters"/>
+        <if test="candidateScope == 'ELIGIBLE'">
+            and (<include refid="eligible"><property name="customer" value="u"/><property name="staff" value="s"/></include>)
+        </if>
+        <if test="matchMode == 'TWO_WAY'">and (<include refid="reverse"/>)</if>
+        <if test="historyFilter == 'NEW'">and dp.pair_id is null</if>
+        order by <if test="sortBy == 'MATCH'">reverse_matched desc,</if> u.id desc
+    </select>
+</mapper>

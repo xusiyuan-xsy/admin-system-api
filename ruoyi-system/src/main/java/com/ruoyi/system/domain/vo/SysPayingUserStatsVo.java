@@ -22,6 +22,27 @@ public class SysPayingUserStatsVo implements Serializable
 
     private List<SysPayingUserBirthYearStatVo> birthYearStats;
 
+    private Long notStartedCount;
+    private Long servingCount;
+    private Long notRenewedCount;
+    private Long successPeopleCount;
+    private Long successCaseCount;
+    private Long successClosedCount;
+
+    public Long getSuccessClosedCount() { return successClosedCount; }
+    public void setSuccessClosedCount(Long value) { successClosedCount = value; }
+
+    public Long getNotStartedCount() { return notStartedCount; }
+    public void setNotStartedCount(Long value) { notStartedCount = value; }
+    public Long getServingCount() { return servingCount; }
+    public void setServingCount(Long value) { servingCount = value; }
+    public Long getNotRenewedCount() { return notRenewedCount; }
+    public void setNotRenewedCount(Long value) { notRenewedCount = value; }
+    public Long getSuccessPeopleCount() { return successPeopleCount; }
+    public void setSuccessPeopleCount(Long value) { successPeopleCount = value; }
+    public Long getSuccessCaseCount() { return successCaseCount; }
+    public void setSuccessCaseCount(Long value) { successCaseCount = value; }
+
     public Long getDelFlag0Count()
     {
         return delFlag0Count;

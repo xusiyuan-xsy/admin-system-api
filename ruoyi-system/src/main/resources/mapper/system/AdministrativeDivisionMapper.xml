@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.AdministrativeDivisionMapper">
+
+    <resultMap id="AdministrativeDivisionResult" type="com.ruoyi.system.domain.AdministrativeDivision">
+        <id property="code" column="code" />
+        <result property="parentCode" column="parent_code" />
+        <result property="name" column="name" />
+        <result property="level" column="level" />
+        <result property="leaf" column="leaf" />
+    </resultMap>
+
+    <sql id="selectRegionColumns">
+        select d.division_id as code,
+               d.parent_id as parent_code,
+               case
+                   when d.name_local is not null and d.name_local != '' then d.name_local
+                   else d.name_en
+               end as name,
+               d.division_level as level,
+               case
+                   when exists (
+                       select 1
+                       from base_administrative_division child
+                       where child.country_code = d.country_code
+                         and child.parent_id = d.division_id
+                   ) then false
+                   else true
+               end as leaf
+        from base_administrative_division d
+    </sql>
+
+    <select id="selectRegionList" resultMap="AdministrativeDivisionResult">
+        <include refid="selectRegionColumns" />
+        where d.country_code = #{countryCode}
+        <choose>
+            <when test="parentCode == null or parentCode == ''">
+                and d.division_level = 1
+            </when>
+            <otherwise>
+                and d.parent_id = #{parentCode}
+            </otherwise>
+        </choose>
+        order by d.sort_order, d.name_en
+    </select>
+
+    <select id="selectRegionByCode" resultMap="AdministrativeDivisionResult">
+        <include refid="selectRegionColumns" />
+        where d.country_code = #{countryCode}
+          and d.division_id = #{code}
+        order by d.division_level desc
+        limit 1
+    </select>
+
+</mapper>

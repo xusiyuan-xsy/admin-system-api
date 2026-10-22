@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.DatingMatchmakerConfigMapper">
+  <resultMap id="Config" type="com.ruoyi.system.domain.DatingMatchmakerConfig">
+    <id column="config_id" property="configId"/>
+    <result column="name" property="name"/>
+    <result column="watermark_text" property="watermarkText"/>
+    <result column="min_age" property="minAge"/><result column="max_age" property="maxAge"/>
+    <result column="min_height" property="minHeight"/><result column="max_height" property="maxHeight"/>
+    <result column="required_fields" property="requiredFieldsJson"/>
+    <result column="is_default" property="defaultConfig"/>
+    <result column="version" property="version"/>
+    <result column="create_by" property="createBy"/><result column="create_time" property="createTime"/>
+    <result column="update_by" property="updateBy"/><result column="update_time" property="updateTime"/>
+  </resultMap>
+  <sql id="columns">
+    c.*, case when s.default_config_id = c.config_id then true else false end as is_default
+  </sql>
+  <select id="selectList" resultMap="Config">
+    select <include refid="columns"/> from dating_matchmaker_config c
+    cross join dating_matchmaker_config_state s
+    where s.state_id = 1
+    <if test="name != null and name != ''">and c.name like concat('%', #{name}, '%')</if>
+    order by is_default desc, c.config_id desc
+  </select>
+  <select id="selectActive" resultMap="Config">
+    select <include refid="columns"/> from dating_matchmaker_config c
+    join dating_matchmaker_config_state s on s.default_config_id = c.config_id and s.state_id = 1
+  </select>
+  <select id="selectById" resultMap="Config">
+    select <include refid="columns"/> from dating_matchmaker_config c
+    cross join dating_matchmaker_config_state s where s.state_id = 1 and c.config_id = #{id}
+  </select>
+  <select id="lockState" resultType="java.lang.Long">
+    select default_config_id from dating_matchmaker_config_state where state_id = 1 for update
+  </select>
+  <select id="count" resultType="int">select count(*) from dating_matchmaker_config</select>
+  <insert id="insert" useGeneratedKeys="true" keyProperty="configId">
+    insert into dating_matchmaker_config
+    (name, watermark_text, min_age, max_age, min_height, max_height, required_fields,
+     version, create_by, create_time, update_by, update_time)
+    values (#{name}, #{watermarkText}, #{minAge}, #{maxAge}, #{minHeight}, #{maxHeight},
+      #{requiredFieldsJson}, 1, #{createBy}, current_timestamp, #{createBy}, current_timestamp)
+  </insert>
+  <update id="update">
+    update dating_matchmaker_config set name=#{name}, watermark_text=#{watermarkText},
+      min_age=#{minAge}, max_age=#{maxAge}, min_height=#{minHeight}, max_height=#{maxHeight},
+      required_fields=#{requiredFieldsJson}, version=version+1,
+      update_by=#{updateBy}, update_time=current_timestamp
+    where config_id=#{configId} and version=#{version}
+  </update>
+  <delete id="delete">delete from dating_matchmaker_config where config_id=#{id}</delete>
+  <update id="setDefault">
+    update dating_matchmaker_config_state set default_config_id=#{id},
+      update_by=#{actor}, update_time=current_timestamp where state_id=1
+  </update>
+</mapper>

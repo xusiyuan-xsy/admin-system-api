@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.DatingRecoveryMapper">
+    <insert id="startRun">
+        insert into dating_recovery_run(run_id,instance_id,started_at,status)
+        values(#{id},#{instance},current_timestamp(3),'RUNNING')
+    </insert>
+    <update id="finishRun">
+        update dating_recovery_run set finished_at=current_timestamp(3),status=#{status},
+        scanned=#{result.scanned},processed=#{result.processed},failed=#{result.failed},
+        record_failures=#{result.recordFailures},error_code=#{error}
+        where run_id=#{id} and status='RUNNING'
+    </update>
+    <sql id="runColumns">run_id,instance_id,started_at,finished_at,status,scanned,processed,failed,record_failures,error_code</sql>
+    <select id="lastRun" resultType="com.ruoyi.system.domain.DatingRecovery$Run">
+        select <include refid="runColumns"/> from dating_recovery_run where instance_id=#{instance}
+        order by started_at desc,run_id desc limit 1
+    </select>
+    <select id="runs" resultType="com.ruoyi.system.domain.DatingRecovery$Run">
+        select <include refid="runColumns"/> from dating_recovery_run order by started_at desc,run_id desc
+    </select>
+    <select id="queue" resultType="com.ruoyi.system.domain.DatingRecovery$Queue">
+        select
+        coalesce(sum(case when status='READY' then 1 else 0 end),0) as ready,
+        coalesce(sum(case when status='READY' and next_attempt_at &lt;= current_timestamp then 1 else 0 end),0) as due,
+        coalesce(sum(case when status='READY' and next_attempt_at &lt;= #{overdueBefore} then 1 else 0 end),0) as overdue,
+        coalesce(sum(case when status='ERROR' then 1 else 0 end),0) as errors,
+        coalesce(sum(case when status='DONE' and outcome='BLOCKED' then 1 else 0 end),0) as blocked,
+        coalesce(sum(case when status='DONE' and outcome='PENDING' then 1 else 0 end),0) as pending
+        from dating_deduction_task
+    </select>
+    <select id="staleRuns" resultType="long">
+        select count(*) from dating_recovery_run where status='RUNNING' and started_at &lt;= #{staleBefore}
+    </select>
+    <sql id="issueCondition">
+        (t.status='ERROR' or (t.status='DONE' and t.outcome='BLOCKED')
+        or (t.status='READY' and (t.attempts&gt;0 or t.next_attempt_at &lt;= #{overdueBefore})))
+    </sql>
+    <sql id="pairOpen">
+        p.progress not in ('SUCCESS_CLOSED','TERMINATED')
+        and l.service_status&lt;&gt;'SUCCESS_CLOSED' and r.service_status&lt;&gt;'SUCCESS_CLOSED'
+    </sql>
+    <sql id="followupOverdue">
+        f.due_at is not null and f.due_at &lt;= current_timestamp and <include refid="pairOpen"/>
+    </sql>
+    <select id="issues" resultType="com.ruoyi.system.domain.DatingRecovery$Issue">
+        select t.task_id,t.pair_id,t.user_id,t.status,t.outcome,t.attempts,
+        (select h.error_code from dating_deduction_history h where h.task_id=t.task_id and h.action='FAILED'
+            order by h.history_id desc limit 1) as error_code,
+        pp.blocked_reason,t.next_attempt_at,
+        (select min(h.create_time) from dating_deduction_history h where h.task_id=t.task_id and h.action='FAILED') as first_failure_at,
+        (select max(h.create_time) from dating_deduction_history h where h.task_id=t.task_id and h.action='FAILED') as last_failure_at,
+        l.name as low_name,r.name as high_name,
+        case when t.user_id=p.user_low_id then l.name else r.name end as customer_name,
+        case when t.user_id=p.user_low_id then coalesce(ls.nick_name,l.create_by)
+             else coalesce(rs.nick_name,r.create_by) end as owner_name,
+        p.progress as pair_progress,
+        case when (t.status='ERROR' or (t.status='DONE' and t.outcome='BLOCKED'))
+            and p.progress not in ('SUCCESS_CLOSED','TERMINATED')
+            and l.service_status&lt;&gt;'SUCCESS_CLOSED' and r.service_status&lt;&gt;'SUCCESS_CLOSED'
+            then true else false end as retry_allowed,
+        coalesce(handler_user.nick_name,f.handler) as handler_name,
+        coalesce(f.status,'UNASSIGNED') as handling_status,f.due_at,
+        case when <include refid="followupOverdue"/> then true else false end as followup_overdue
+        from dating_deduction_task t
+        join dating_pair p on p.pair_id=t.pair_id
+        join dating_pair_participant pp on pp.pair_id=t.pair_id and pp.user_id=t.user_id
+        join sys_paying_user l on l.id=p.user_low_id
+        join sys_paying_user r on r.id=p.user_high_id
+        left join sys_user ls on ls.user_id=l.matchmaker_id
+        left join sys_user rs on rs.user_id=r.matchmaker_id
+        left join dating_exception_followup f on f.task_id=t.task_id
+        left join sys_user handler_user on handler_user.user_name=f.handler
+        where <include refid="issueCondition"/>
+        <if test="pairId != null">and t.pair_id=#{pairId}</if>
+        <if test="kind == 'ERROR'">and t.status='ERROR'</if>
+        <if test="kind == 'BLOCKED'">and t.status='DONE' and t.outcome='BLOCKED'</if>
+        <if test="kind == 'READY'">and t.status='READY'</if>
+        <if test="handling != null">and coalesce(f.status,'UNASSIGNED')=#{handling}</if>
+        <if test="mine != null">and f.handler=#{mine}</if>
+        <if test="overdueOnly">and <include refid="followupOverdue"/></if>
+        <if test="owner != null">
+            and ((case when l.matchmaker_id is null then l.create_by else ls.user_name end)=#{owner}
+              or (case when r.matchmaker_id is null then r.create_by else rs.user_name end)=#{owner})
+        </if>
+        order by t.task_id desc
+    </select>
+    <select id="history" resultType="com.ruoyi.system.domain.DatingRecovery$History">
+        select history_id,task_id,action,attempt,error_code,create_by,create_time,reason
+        from dating_deduction_history where task_id=#{taskId} order by history_id desc
+    </select>
+    <select id="followup" resultType="com.ruoyi.system.domain.DatingRecovery$Followup">
+        select f.task_id,f.handler,coalesce(s.nick_name,f.handler) as handler_name,
+        f.status,f.version,f.due_at,f.update_by,f.update_time
+        from dating_exception_followup f left join sys_user s on s.user_name=f.handler
+        where f.task_id=#{taskId}
+    </select>
+    <select id="activeIssue" resultType="boolean">
+        select case when count(*)&gt;0 then true else false end
+        from dating_deduction_task t
+        join dating_pair p on p.pair_id=t.pair_id
+        join sys_paying_user l on l.id=p.user_low_id
+        join sys_paying_user r on r.id=p.user_high_id
+        where t.task_id=#{taskId} and <include refid="issueCondition"/> and <include refid="pairOpen"/>
+    </select>
+    <insert id="insertFollowup">
+        insert into dating_exception_followup(task_id,handler,status,due_at,version,update_by,update_time)
+        values(#{taskId},#{actor},'IN_PROGRESS',#{dueAt},1,#{actor},current_timestamp(3))
+    </insert>
+    <update id="updateFollowup">
+        update dating_exception_followup set handler=#{handler},status=#{status},due_at=#{dueAt},
+        version=version+1,update_by=#{actor},update_time=current_timestamp(3)
+        where task_id=#{taskId} and version=#{version}
+    </update>
+    <insert id="insertFollowupHistory">
+        insert into dating_exception_followup_history(task_id,version,action,handler,status,due_at,note,create_by,create_time)
+        select task_id,version,#{action},handler,status,due_at,#{note},#{actor},current_timestamp(3)
+        from dating_exception_followup where task_id=#{taskId}
+    </insert>
+    <select id="followupHistory" resultType="com.ruoyi.system.domain.DatingRecovery$FollowupHistory">
+        select history_id,task_id,version,action,handler,status,due_at,note,create_by,create_time
+        from dating_exception_followup_history where task_id=#{taskId} order by history_id desc
+    </select>
+</mapper>

@@ -27,7 +27,7 @@ public class SysPayingRequirement extends BaseEntity
     /** 要求对方所在城市 */
     private String cityRequire;
 
-    /** 要求对方学历 */
+    /** 最低学历要求（0或空不限，1至8按已有学历等级） */
     private String education;
 
     /** 要求对方最低身高(cm) */
@@ -39,19 +39,19 @@ public class SysPayingRequirement extends BaseEntity
     /** 要求无纹身（0不限 1要求无纹身） */
     private String noTattoo;
 
-    /** 是否接受异地（0否 1是） */
+    /** 是否接受异地（0否，需指定城市；1是；空不限） */
     private String acceptLongDist;
 
-    /** 抽烟情况（0无 1偶尔 2经常） */
+    /** 可接受的最高吸烟频率（0无 1偶尔 2经常，空不限） */
     private String smokeHabit;
 
-    /** 喝酒情况（0无 1偶尔 2经常） */
+    /** 可接受的最高饮酒频率（0无 1偶尔 2经常，空不限） */
     private String drinkHabit;
 
-    /** 是否有车（0无 1有） */
+    /** 是否要求有车（0或空不限，1要求有车） */
     private String hasCar;
 
-    /** 是否有房（0无 1有） */
+    /** 是否要求有房（0或空不限，1要求有房） */
     private String hasHouse;
 
     /** 其他要求 */

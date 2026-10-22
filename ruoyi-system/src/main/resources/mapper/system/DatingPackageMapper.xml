@@ -6,6 +6,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <resultMap type="DatingPackage" id="DatingPackageResult">
         <id     property="packageId"         column="package_id"          />
+        <result property="selectionMode" column="selection_mode"/>
+        <result property="serviceOptionCodesJson" column="service_option_codes"/>
+        <result property="ruleVersion" column="rule_version"/>
         <result property="packageName"        column="package_name"        />
         <result property="packageType"        column="package_type"        />
         <result property="price"              column="price"               />
@@ -25,7 +28,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectDatingPackageVo">
-        select package_id, package_name, package_type, price,
+        select package_id, package_name, package_type, price, selection_mode, service_option_codes, rule_version,
                limit_expire, service_duration, limit_service_times, service_times,
                description, cover_image, sort_order, status, del_flag,
                create_by, create_time, update_by, update_time
@@ -60,9 +63,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="selectDatingPackageVo"/>
         where package_id = #{packageId} and del_flag = '0'
     </select>
+    <select id="lockDatingPackageById" resultMap="DatingPackageResult">
+        <include refid="selectDatingPackageVo"/>
+        where package_id = #{packageId} and del_flag = '0' for update
+    </select>
 
     <insert id="insertDatingPackage" parameterType="DatingPackage" useGeneratedKeys="true" keyProperty="packageId">
         insert into dating_package (
+            selection_mode, service_option_codes, rule_version,
             <if test="packageName != null and packageName != ''">package_name,</if>
             <if test="packageType != null and packageType != ''">package_type,</if>
             <if test="price != null">price,</if>
@@ -78,6 +86,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             create_time,
             update_time
         ) values (
+            #{selectionMode}, #{serviceOptionCodesJson}, #{ruleVersion},
             <if test="packageName != null and packageName != ''">#{packageName},</if>
             <if test="packageType != null and packageType != ''">#{packageType},</if>
             <if test="price != null">#{price},</if>
@@ -90,14 +99,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="sortOrder != null">#{sortOrder},</if>
             <if test="status != null and status != ''">#{status},</if>
             <if test="createBy != null and createBy != ''">#{createBy},</if>
-            sysdate(),
-            sysdate()
+            current_timestamp,
+            current_timestamp
         )
     </insert>
 
     <update id="updateDatingPackage" parameterType="DatingPackage">
         update dating_package
         <set>
+            <if test="selectionMode != null">selection_mode = #{selectionMode},</if>
+            <if test="serviceOptionCodesJson != null">service_option_codes = #{serviceOptionCodesJson},</if>
+            <if test="ruleVersion != null">rule_version = #{ruleVersion},</if>
             <if test="packageName != null and packageName != ''">package_name = #{packageName},</if>
             <if test="packageType != null and packageType != ''">package_type = #{packageType},</if>
             <if test="price != null">price = #{price},</if>
@@ -110,20 +122,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="sortOrder != null">sort_order = #{sortOrder},</if>
             <if test="status != null and status != ''">status = #{status},</if>
             <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
-            update_time = sysdate()
+            update_time = current_timestamp
         </set>
         where package_id = #{packageId}
     </update>
 
     <update id="deleteDatingPackageById" parameterType="Long">
         update dating_package
-        set del_flag = '2', update_time = sysdate()
+        set del_flag = '2', update_time = current_timestamp
         where package_id = #{packageId} and del_flag = '0'
     </update>
 
     <update id="deleteDatingPackageByIds" parameterType="Long">
         update dating_package
-        set del_flag = '2', update_time = sysdate()
+        set del_flag = '2', update_time = current_timestamp
         where package_id in
         <foreach collection="array" item="packageId" open="(" separator="," close=")">
             #{packageId}

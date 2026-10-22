@@ -16,18 +16,22 @@
     </description>
 
     <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- spring-boot-devtools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <optional>true</optional> <!-- 表示依赖不会传递 -->
-        </dependency>
-
-        <!-- spring-doc -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
 
          <!-- Mysql驱动包 -->
@@ -48,12 +52,6 @@
             <artifactId>ruoyi-quartz</artifactId>
         </dependency>
 
-        <!-- 代码生成-->
-        <dependency>
-            <groupId>com.ruoyi</groupId>
-            <artifactId>ruoyi-generator</artifactId>
-        </dependency>
-
         <!-- 阿里云OSS -->
         <dependency>
             <groupId>com.aliyun.oss</groupId>
@@ -65,6 +63,15 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+                <configuration>
+                    <!-- SpringUtils/AsyncManager retain a context-bound executor in static state. -->
+                    <reuseForks>false</reuseForks>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

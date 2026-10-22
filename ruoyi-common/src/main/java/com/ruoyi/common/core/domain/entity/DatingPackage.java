@@ -2,54 +2,77 @@ package com.ruoyi.common.core.domain.entity;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
+import com.alibaba.fastjson2.JSON;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
- * Ì×²Í±í dating_package
+ * å¥—é¤è¡¨ dating_package
  */
 public class DatingPackage extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
-    /** Ì×²ÍID */
+    /** å¥—é¤ID */
     private Long packageId;
 
-    /** Ì×²ÍÃû³Æ */
+    /** å¥—é¤åç§° */
     private String packageName;
 
-    /** Ì×²ÍÀàĞÍ£¨0»ù´¡Ì×²Í 1VIPÌ×²Í£© */
+    /** å¥—é¤ç±»å‹ï¼ˆ0åŸºç¡€å¥—é¤ 1VIPå¥—é¤ï¼‰ */
     private String packageType;
 
-    /** Ì×²Í¼Û¸ñ */
+    /** å¥—é¤ä»·æ ¼ */
     private BigDecimal price;
 
-    /** ÊÇ·ñÏŞÖÆ·şÎñÌìÊı£¨0·ñ 1ÊÇ£© */
+    /** æ˜¯å¦é™åˆ¶æœåŠ¡å¤©æ•°ï¼ˆ0å¦ 1æ˜¯ï¼‰ */
     private String limitExpire;
 
-    /** ·şÎñÊ±³¤£¨Ìì£© */
+    /** æœåŠ¡æ—¶é•¿ï¼ˆå¤©ï¼‰ */
     private Integer serviceDuration;
 
-    /** ÊÇ·ñÏŞÖÆ·şÎñ´ÎÊı£¨0·ñ 1ÊÇ£© */
+    /** æ˜¯å¦é™åˆ¶æœåŠ¡æ¬¡æ•°ï¼ˆ0å¦ 1æ˜¯ï¼‰ */
     private String limitServiceTimes;
 
-    /** ·şÎñ´ÎÊı£¨´Î£© */
+    /** æœåŠ¡æ¬¡æ•°ï¼ˆæ¬¡ï¼‰ */
     private Integer serviceTimes;
 
-    /** Ì×²Í½éÉÜ */
+    /** å¥—é¤ä»‹ç» */
     private String description;
 
-    /** Ì×²Í·âÃæ */
+    /** å¥—é¤å°é¢ */
     private String coverImage;
 
-    /** ÅÅĞòÈ¨ÖØ(Ô½Ğ¡Ô½¿¿Ç°) */
+    /** æ’åºæƒé‡(è¶Šå°è¶Šé å‰) */
     private Integer sortOrder;
 
-    /** Ì×²Í×´Ì¬£¨0ÏÂ¼Ü 1ÉÏ¼Ü£© */
+    /** å¥—é¤çŠ¶æ€ï¼ˆ0å¯ç”¨ 1åœç”¨ï¼Œä¸ sys_normal_disable ä¸€è‡´ï¼‰ */
     private String status;
 
-    /** É¾³ı±êÖ¾£¨0´æÔÚ 2É¾³ı£© */
+    /** åˆ é™¤æ ‡å¿—ï¼ˆ0å­˜åœ¨ 2åˆ é™¤ï¼‰ */
     private String delFlag;
+
+    private String selectionMode;
+    private String serviceOptionCodesJson;
+    private Integer ruleVersion;
+
+    public String getSelectionMode() { return selectionMode; }
+    public void setSelectionMode(String selectionMode) { this.selectionMode = selectionMode; }
+    @JsonIgnore
+    public String getServiceOptionCodesJson() { return serviceOptionCodesJson; }
+    public void setServiceOptionCodesJson(String value) { this.serviceOptionCodesJson = value; }
+    public List<String> getServiceOptionCodes()
+    {
+        return serviceOptionCodesJson == null ? List.of() : JSON.parseArray(serviceOptionCodesJson, String.class);
+    }
+    public void setServiceOptionCodes(List<String> codes)
+    {
+        this.serviceOptionCodesJson = codes == null ? null : JSON.toJSONString(codes);
+    }
+    public Integer getRuleVersion() { return ruleVersion; }
+    public void setRuleVersion(Integer ruleVersion) { this.ruleVersion = ruleVersion; }
 
     public Long getPackageId() { return packageId; }
     public void setPackageId(Long packageId) { this.packageId = packageId; }

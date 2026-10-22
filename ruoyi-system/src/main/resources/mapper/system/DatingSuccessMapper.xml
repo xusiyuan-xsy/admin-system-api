@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.DatingSuccessMapper">
+    <select id="affectedPairs" resultType="long" flushCache="true" useCache="false">
+        select pair_id from dating_pair where user_low_id in (#{low},#{high}) or user_high_id in (#{low},#{high})
+        order by pair_id
+    </select>
+    <sql id="columns">
+        c.case_id,c.pair_id,c.recommendation_id,l.user_name as low_name,h.user_name as high_name,
+        c.success_at,c.confirmed_by,c.create_time
+    </sql>
+    <sql id="tables">
+        from dating_success_case c join dating_pair p on p.pair_id=c.pair_id
+        join dating_success_case_member l on l.case_id=c.case_id and l.user_id=p.user_low_id
+        join dating_success_case_member h on h.case_id=c.case_id and h.user_id=p.user_high_id
+        join sys_paying_user lu on lu.id=p.user_low_id join sys_paying_user hu on hu.id=p.user_high_id
+        left join sys_user ls on ls.user_id=lu.matchmaker_id left join sys_user hs on hs.user_id=hu.matchmaker_id
+    </sql>
+    <sql id="scope">
+        <if test="owner != null">
+            and ((case when lu.matchmaker_id is null then lu.create_by else ls.user_name end)=#{owner}
+              or (case when hu.matchmaker_id is null then hu.create_by else hs.user_name end)=#{owner})
+        </if>
+    </sql>
+    <sql id="filters">
+        <include refid="scope"/>
+        <if test="keyword != null and keyword != ''">and (l.user_name like concat('%',#{keyword},'%') or h.user_name like concat('%',#{keyword},'%'))</if>
+        <if test="from != null">and c.success_at &gt;= #{from}</if>
+        <if test="until != null">and c.success_at &lt; #{until}</if>
+        <if test="matchmakerId != null">and (l.matchmaker_id=#{matchmakerId} or h.matchmaker_id=#{matchmakerId})</if>
+    </sql>
+    <select id="findByPair" resultType="com.ruoyi.system.domain.DatingSuccess$Case" flushCache="true" useCache="false">
+        select <include refid="columns"/> <include refid="tables"/> where c.pair_id=#{pairId}
+    </select>
+    <select id="selectCase" resultType="com.ruoyi.system.domain.DatingSuccess$Case">
+        select <include refid="columns"/> <include refid="tables"/> where c.case_id=#{id}
+    </select>
+    <select id="list" resultType="com.ruoyi.system.domain.DatingSuccess$Case">
+        select <include refid="columns"/> <include refid="tables"/> where 1=1 <include refid="filters"/>
+        order by c.success_at desc,c.case_id desc
+    </select>
+    <select id="stats" resultType="com.ruoyi.system.domain.DatingSuccess$Stats">
+        select count(distinct c.case_id) as case_count,count(distinct m.user_id) as people_count
+        <include refid="tables"/> join dating_success_case_member m on m.case_id=c.case_id
+        where 1=1 <include refid="filters"/>
+    </select>
+    <select id="matchmakers" resultType="com.ruoyi.system.domain.DatingSuccess$Matchmaker">
+        select m.matchmaker_id,max(m.matchmaker_name) as matchmaker_name
+        <include refid="tables"/> join dating_success_case_member m on m.case_id=c.case_id
+        where m.matchmaker_id is not null <include refid="scope"/>
+        group by m.matchmaker_id order by m.matchmaker_id
+    </select>
+    <select id="members" resultType="com.ruoyi.system.domain.DatingSuccess$Member">
+        select user_id,user_name,matchmaker_id,matchmaker_name,retained_times
+        from dating_success_case_member where case_id=#{id} order by user_id
+    </select>
+    <select id="evidence" resultType="com.ruoyi.system.domain.DatingSuccess$Evidence">
+        select note,evidence from dating_success_case where case_id=#{id}
+    </select>
+    <insert id="insertCase" useGeneratedKeys="true" keyProperty="key.id">
+        insert into dating_success_case(pair_id,recommendation_id,success_at,confirmed_by,note,evidence,create_time)
+        values(#{pairId},#{recommendationId},#{request.successAt},#{actor},#{request.note},#{request.evidence},current_timestamp)
+    </insert>
+    <insert id="insertMember">
+        insert into dating_success_case_member(case_id,user_id,user_name,matchmaker_id,matchmaker_name,retained_times)
+        select #{caseId},u.id,u.name,u.matchmaker_id,s.nick_name,
+        (select coalesce(sum(e.remaining_times),0) from dating_entitlement e where e.user_id=u.id and e.status in ('ACTIVE','EXHAUSTED'))
+        from sys_paying_user u left join sys_user s on s.user_id=u.matchmaker_id where u.id=#{userId}
+    </insert>
+    <update id="closeEntitlements">
+        update dating_entitlement set status='SUCCESS_CLOSED' where user_id=#{userId} and status in ('ACTIVE','EXHAUSTED')
+    </update>
+    <update id="cancelOrders">
+        update dating_order set status='CANCELLED',cancel_reason=#{reason},update_by=#{actor},update_time=current_timestamp
+        where user_id=#{userId} and status='UNPAID'
+    </update>
+    <update id="stopParticipants">
+        update dating_pair_participant set deduct_status='STOPPED',blocked_reason=#{reason}
+        where pair_id=#{pairId} and deduct_status&lt;&gt;'DEDUCTED'
+    </update>
+    <update id="stopTasks">
+        update dating_deduction_task set status='CANCELLED',outcome='STOPPED'
+        where pair_id=#{pairId} and status in ('READY','ERROR')
+    </update>
+</mapper>

@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.DatingWorkflowMapper">
+    <select id="selectStaff" resultType="com.ruoyi.system.domain.DatingWorkflow$Staff">
+        select user_id, user_name, nick_name from sys_user where status='0' and del_flag='0'
+        <if test="keyword != null and keyword != ''">and (user_name like concat('%',#{keyword},'%') or nick_name like concat('%',#{keyword},'%'))</if>
+        order by user_id limit 50
+    </select>
+    <select id="selectStaffById" resultType="com.ruoyi.system.domain.DatingWorkflow$Staff">
+        select user_id, user_name, nick_name from sys_user where user_id=#{id} and status='0' and del_flag='0'
+    </select>
+    <sql id="customerColumns">
+        u.id, u.name, u.phone, u.status, u.service_status, u.matchmaker_id, s.nick_name,
+        case when u.matchmaker_id is null then u.create_by else s.user_name end as owner,
+        e.entitlement_id, e.remaining_times
+    </sql>
+    <sql id="customerTables">
+        from sys_paying_user u left join sys_user s on s.user_id=u.matchmaker_id
+        left join dating_entitlement e on e.user_id=u.id and e.status='ACTIVE'
+    </sql>
+    <select id="selectCustomers" resultType="com.ruoyi.system.domain.DatingWorkflow$Customer">
+        select <include refid="customerColumns"/> <include refid="customerTables"/>
+        where u.del_flag='0'
+        <if test="owner != null">and (case when u.matchmaker_id is null then u.create_by else s.user_name end)=#{owner}</if>
+        <if test="keyword != null and keyword != ''">and (u.name like concat('%',#{keyword},'%') or u.phone like concat('%',#{keyword},'%'))</if>
+        <if test="serviceStatus != null and serviceStatus != ''">and u.service_status=#{serviceStatus}</if>
+        order by u.id desc
+    </select>
+    <select id="selectCustomer" resultType="com.ruoyi.system.domain.DatingWorkflow$Customer" flushCache="true" useCache="false">
+        select <include refid="customerColumns"/> <include refid="customerTables"/> where u.id=#{id}
+    </select>
+    <select id="lockCustomerRow" resultType="long" flushCache="true" useCache="false">
+        select id from sys_paying_user where id=#{id} and del_flag='0' for update
+    </select>
+    <update id="assign">update sys_paying_user set matchmaker_id=#{staffId} where id=#{userId}</update>
+    <insert id="insertAssignment">
+        insert into dating_assignment_history(user_id,previous_id,next_id,reason,create_by,create_time)
+        values(#{userId},#{previous},#{next},#{reason},#{actor},current_timestamp)
+    </insert>
+    <select id="selectAssignments" resultType="com.ruoyi.system.domain.DatingWorkflow$Assignment">
+        select h.id,h.user_id,p.nick_name as previous_name,n.nick_name as next_name,h.reason,h.create_by,h.create_time
+        from dating_assignment_history h left join sys_user p on p.user_id=h.previous_id
+        left join sys_user n on n.user_id=h.next_id where h.user_id=#{userId} order by h.id desc
+    </select>
+    <sql id="pairColumns">
+        p.pair_id,p.user_low_id,p.user_high_id,l.name as low_name,h.name as high_name,p.progress,
+        case when l.matchmaker_id is null then l.create_by else ls.user_name end as low_owner,
+        case when h.matchmaker_id is null then h.create_by else hs.user_name end as high_owner,
+        p.create_by,p.create_time
+    </sql>
+    <sql id="pairTables">
+        from dating_pair p join sys_paying_user l on l.id=p.user_low_id join sys_paying_user h on h.id=p.user_high_id
+        left join sys_user ls on ls.user_id=l.matchmaker_id left join sys_user hs on hs.user_id=h.matchmaker_id
+    </sql>
+    <select id="selectPair" resultType="com.ruoyi.system.domain.DatingWorkflow$Pair" flushCache="true" useCache="false">
+        select <include refid="pairColumns"/> <include refid="pairTables"/> where p.pair_id=#{id}
+    </select>
+    <select id="lockPairRow" resultType="long" flushCache="true" useCache="false">
+        select pair_id from dating_pair where pair_id=#{id} for update
+    </select>
+    <select id="findPair" resultType="com.ruoyi.system.domain.DatingWorkflow$Pair">
+        select <include refid="pairColumns"/> <include refid="pairTables"/> where p.user_low_id=#{low} and p.user_high_id=#{high}
+    </select>
+    <select id="selectPairs" resultType="com.ruoyi.system.domain.DatingWorkflow$Pair">
+        select <include refid="pairColumns"/> <include refid="pairTables"/> where 1=1
+        <if test="owner != null">
+            and ((case when l.matchmaker_id is null then l.create_by else ls.user_name end)=#{owner}
+              or (case when h.matchmaker_id is null then h.create_by else hs.user_name end)=#{owner})
+        </if>
+        <if test="keyword != null and keyword != ''">and (l.name like concat('%',#{keyword},'%') or h.name like concat('%',#{keyword},'%'))</if>
+        <if test="progress != null and progress != ''">and p.progress=#{progress}</if>
+        order by p.pair_id desc
+    </select>
+    <insert id="insertPair" useGeneratedKeys="true" keyProperty="key.id">
+        insert into dating_pair(user_low_id,user_high_id,progress,create_by,create_time)
+        values(#{low},#{high},'COMMUNICATING',#{actor},current_timestamp)
+    </insert>
+    <update id="updateProgress">update dating_pair set progress=#{progress} where pair_id=#{id}</update>
+    <insert id="insertParticipant">
+        insert into dating_pair_participant(pair_id,user_id,entitlement_id,rule_snapshot,deduct_status)
+        select #{pairId},#{userId},entitlement_id,rule_snapshot,'PENDING' from dating_entitlement where entitlement_id=#{entitlementId} and user_id=#{userId}
+    </insert>
+    <sql id="participantColumns">
+        pp.pair_id,pp.user_id,u.name,pp.entitlement_id,pp.rule_snapshot,pp.deduct_status,pp.blocked_reason,
+        pp.ledger_id,e.remaining_times,u.service_status
+    </sql>
+    <sql id="participantTables">
+        from dating_pair_participant pp join sys_paying_user u on u.id=pp.user_id
+        join dating_entitlement e on e.entitlement_id=pp.entitlement_id
+    </sql>
+    <select id="selectParticipants" resultType="com.ruoyi.system.domain.DatingWorkflow$Participant">
+        select <include refid="participantColumns"/> <include refid="participantTables"/> where pp.pair_id=#{pairId} order by pp.user_id
+    </select>
+    <select id="lockParticipantRow" resultType="long" flushCache="true" useCache="false">
+        select user_id from dating_pair_participant where pair_id=#{pairId} and user_id=#{userId} for update
+    </select>
+    <select id="selectParticipant" resultType="com.ruoyi.system.domain.DatingWorkflow$Participant" flushCache="true" useCache="false">
+        select <include refid="participantColumns"/> <include refid="participantTables"/>
+        where pp.pair_id=#{pairId} and pp.user_id=#{userId}
+    </select>
+    <sql id="recommendationColumns">id,pair_id,reason,low_intention,high_intention,create_by,create_time</sql>
+    <select id="selectRecommendation" resultType="com.ruoyi.system.domain.DatingWorkflow$Recommendation">
+        select <include refid="recommendationColumns"/> from dating_recommendation where id=#{id}
+    </select>
+    <select id="findRecommendation" resultType="com.ruoyi.system.domain.DatingWorkflow$Recommendation">
+        select <include refid="recommendationColumns"/> from dating_recommendation where create_by=#{actor} and request_key=#{key}
+    </select>
+    <select id="selectRecommendations" resultType="com.ruoyi.system.domain.DatingWorkflow$Recommendation">
+        select <include refid="recommendationColumns"/> from dating_recommendation where pair_id=#{pairId} order by id desc
+    </select>
+    <insert id="insertRecommendation" useGeneratedKeys="true" keyProperty="key.id">
+        insert into dating_recommendation(pair_id,reason,low_intention,high_intention,request_key,create_by,create_time)
+        values(#{pairId},#{request.reason},'PENDING','PENDING',#{request.requestKey},#{actor},current_timestamp)
+    </insert>
+    <update id="updateIntention">
+        update dating_recommendation set
+        <choose><when test="low">low_intention</when><otherwise>high_intention</otherwise></choose>
+        =#{value} where id=#{id}
+    </update>
+    <insert id="insertIntention">
+        insert into dating_pair_intention(recommendation_id,user_id,intention,reason,create_by,create_time)
+        values(#{id},#{request.userId},#{request.intention},#{request.reason},#{actor},current_timestamp)
+    </insert>
+    <select id="selectIntentions" resultType="com.ruoyi.system.domain.DatingWorkflow$Intention">
+        select i.id,i.recommendation_id,i.user_id,i.intention,i.reason,i.create_by,i.create_time
+        from dating_pair_intention i join dating_recommendation r on r.id=i.recommendation_id
+        where r.pair_id=#{pairId} order by i.id desc
+    </select>
+    <sql id="eventColumns">event_id,pair_id,option_code,occurred_at,note,evidence,request_key,appointment_id,create_by,create_time</sql>
+    <select id="selectEvents" resultType="com.ruoyi.system.domain.DatingWorkflow$Event">
+        select <include refid="eventColumns"/> from dating_service_event where pair_id=#{pairId} order by event_id desc
+    </select>
+    <select id="findEvent" resultType="com.ruoyi.system.domain.DatingWorkflow$Event">
+        select <include refid="eventColumns"/> from dating_service_event where pair_id=#{pairId} and request_key=#{requestKey}
+    </select>
+    <insert id="insertEvent" useGeneratedKeys="true" keyProperty="key.id">
+        insert into dating_service_event(pair_id,option_code,occurred_at,note,evidence,request_key,appointment_id,create_by,create_time)
+        values(#{pairId},#{request.optionCode},#{request.occurredAt},#{request.note},#{request.evidence},
+            #{request.requestKey},#{appointmentId},#{actor},current_timestamp)
+    </insert>
+    <sql id="appointmentColumns">appointment_id,pair_id,planned_at,place,status,completed_at,create_by,create_time</sql>
+    <select id="selectAppointments" resultType="com.ruoyi.system.domain.DatingWorkflow$Appointment">
+        select <include refid="appointmentColumns"/> from dating_appointment where pair_id=#{pairId} order by appointment_id desc
+    </select>
+    <select id="selectAppointment" resultType="com.ruoyi.system.domain.DatingWorkflow$Appointment" flushCache="true" useCache="false">
+        select <include refid="appointmentColumns"/> from dating_appointment where appointment_id=#{id}
+    </select>
+    <insert id="insertAppointment" useGeneratedKeys="true" keyProperty="key.id">
+        insert into dating_appointment(pair_id,planned_at,place,status,create_by,create_time)
+        values(#{pairId},#{request.plannedAt},#{request.place},'SCHEDULED',#{actor},current_timestamp)
+    </insert>
+    <update id="reschedule">
+        update dating_appointment set planned_at=#{request.plannedAt},place=#{request.place} where appointment_id=#{id}
+    </update>
+    <update id="updateAppointment">
+        update dating_appointment set status=#{status},completed_at=#{completedAt} where appointment_id=#{id}
+    </update>
+    <insert id="insertAppointmentHistory">
+        insert into dating_appointment_history(appointment_id,action,planned_at,place,reason,create_by,create_time)
+        values(#{id},#{action},#{plannedAt},#{place},#{reason},#{actor},current_timestamp)
+    </insert>
+    <select id="selectAppointmentHistory" resultType="com.ruoyi.system.domain.DatingWorkflow$AppointmentHistory">
+        select h.id,h.appointment_id,h.action,h.planned_at,h.place,h.reason,h.create_by,h.create_time
+        from dating_appointment_history h join dating_appointment a on a.appointment_id=h.appointment_id
+        where a.pair_id=#{pairId} order by h.id desc
+    </select>
+    <insert id="insertTasks">
+        insert into dating_deduction_task(event_id,pair_id,user_id,status,attempts,next_attempt_at)
+        select #{eventId},pair_id,user_id,'READY',0,current_timestamp from dating_pair_participant where pair_id=#{pairId}
+    </insert>
+    <sql id="taskColumns">task_id,event_id,pair_id,user_id,status,outcome,attempts,last_error,next_attempt_at</sql>
+    <select id="selectTasks" resultType="com.ruoyi.system.domain.DatingWorkflow$Task">
+        select <include refid="taskColumns"/> from dating_deduction_task where pair_id=#{pairId} order by task_id desc
+    </select>
+    <select id="selectReadyTasks" resultType="long">
+        select task_id from dating_deduction_task where status='READY' and next_attempt_at &lt;= current_timestamp
+        <if test="pairId != null">and pair_id=#{pairId}</if>
+        order by task_id limit 100
+    </select>
+    <select id="selectTask" resultType="com.ruoyi.system.domain.DatingWorkflow$Task" flushCache="true" useCache="false">
+        select <include refid="taskColumns"/> from dating_deduction_task where task_id=#{id}
+    </select>
+    <select id="lockTask" resultType="com.ruoyi.system.domain.DatingWorkflow$Task" flushCache="true" useCache="false">
+        select <include refid="taskColumns"/> from dating_deduction_task where task_id=#{id} for update
+    </select>
+    <sql id="balance">
+        select e.entitlement_id,e.user_id,e.order_id,o.status as order_status,e.status,e.remaining_times,e.exhausted_at
+        from dating_entitlement e join dating_order o on o.order_id=e.order_id where e.entitlement_id=#{id}
+    </sql>
+    <select id="lockBalance" resultType="com.ruoyi.system.domain.DatingWorkflow$Balance"><include refid="balance"/> for update</select>
+    <select id="selectBalance" resultType="com.ruoyi.system.domain.DatingWorkflow$Balance"><include refid="balance"/></select>
+    <sql id="ledgerColumns">ledger_id,pair_id,user_id,entitlement_id,order_id,event_id,delta,balance_before,balance_after,create_by,create_time</sql>
+    <select id="selectDeduction" resultType="com.ruoyi.system.domain.DatingWorkflow$Ledger">
+        select <include refid="ledgerColumns"/> from dating_entitlement_ledger
+        where pair_id=#{pairId} and user_id=#{userId} and entry_type='SERVICE_DEDUCT'
+    </select>
+    <select id="selectLedger" resultType="com.ruoyi.system.domain.DatingWorkflow$Ledger">
+        select <include refid="ledgerColumns"/> from dating_entitlement_ledger where pair_id=#{pairId} order by ledger_id desc
+    </select>
+    <update id="deduct">
+        update dating_entitlement set used_times=used_times+1,
+        status=case when remaining_times=1 then 'EXHAUSTED' else 'ACTIVE' end,
+        exhausted_at=case when remaining_times=1 then current_timestamp else exhausted_at end,
+        remaining_times=remaining_times-1
+        where entitlement_id=#{id} and status='ACTIVE' and remaining_times&gt;0
+    </update>
+    <insert id="insertDeduction" useGeneratedKeys="true" keyProperty="key.id">
+        insert into dating_entitlement_ledger(entitlement_id,order_id,user_id,entry_type,delta,balance_before,
+            balance_after,create_by,create_time,pair_id,event_id)
+        values(#{balance.entitlementId},#{balance.orderId},#{task.userId},'SERVICE_DEDUCT',-1,#{balance.remainingTimes},
+            #{balance.remainingTimes}-1,#{actor},current_timestamp,#{task.pairId},#{task.eventId})
+    </insert>
+    <update id="updateParticipant">
+        update dating_pair_participant set deduct_status=#{status},blocked_reason=#{reason},ledger_id=#{ledgerId}
+        where pair_id=#{pairId} and user_id=#{userId}
+    </update>
+    <update id="completeTask">
+        update dating_deduction_task set status='DONE',outcome=#{outcome},last_error=null where task_id=#{id}
+    </update>
+    <update id="failTask">
+        update dating_deduction_task set status=case when attempts&gt;=4 then 'ERROR' else 'READY' end,
+        attempts=attempts+1,last_error=#{error},next_attempt_at=#{nextAttempt}
+        where task_id=#{id} and status='READY' and next_attempt_at &lt;= current_timestamp
+    </update>
+    <insert id="insertTaskHistory">
+        insert into dating_deduction_history(task_id,action,attempt,error_code,create_by,create_time,reason)
+        values(#{id},#{action},#{attempt},#{error},#{actor},current_timestamp(3),#{reason})
+    </insert>
+    <update id="retryTask">
+        update dating_deduction_task set status='READY',attempts=0,last_error=null,next_attempt_at=current_timestamp
+        where task_id=#{id} and (status='ERROR' or (status='DONE' and outcome='BLOCKED'))
+    </update>
+</mapper>

@@ -33,15 +33,12 @@ public class SysPayingUser extends BaseEntity
     private String phone;
 
     /** 登录密码（加密存储） */
-    @Excel(name = "登录密码", cellType = ColumnType.TEXT)
     private String password;
 
     /** 最后登录IP */
     private String lastLoginIp;
 
     /** 最后登录时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Excel(name = "最后登录时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss", type = Type.EXPORT)
     private Date lastLoginTime;
 
     /** 姓名 */
@@ -135,9 +132,22 @@ public class SysPayingUser extends BaseEntity
     @JsonDeserialize(using = JsonStringListDeserializer.class)
     private List<String> photos;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private int legacyPhotoCount;
+
+    public int getLegacyPhotoCount() { return legacyPhotoCount; }
+    public void setLegacyPhotoCount(int legacyPhotoCount) { this.legacyPhotoCount = legacyPhotoCount; }
+
     /** 状态（0启用 1禁用） */
     @Excel(name = "状态", readConverterExp = "0=启用,1=禁用")
     private String status;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Excel(name = "服务状态", type = Type.EXPORT, readConverterExp = "NOT_STARTED=未开通,SERVING=服务中,NOT_RENEWED=未续单,SUCCESS_CLOSED=成功结案")
+    private String serviceStatus;
+
+    public String getServiceStatus() { return serviceStatus; }
+    public void setServiceStatus(String serviceStatus) { this.serviceStatus = serviceStatus; }
 
     /** 删除标志（0存在 2删除） */
     private String delFlag;
@@ -153,12 +163,17 @@ public class SysPayingUser extends BaseEntity
     public void setPhone(String phone) { this.phone = phone; }
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @com.alibaba.fastjson2.annotation.JSONField(serialize = false)
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @com.alibaba.fastjson2.annotation.JSONField(serialize = false)
     public String getLastLoginIp() { return lastLoginIp; }
     public void setLastLoginIp(String lastLoginIp) { this.lastLoginIp = lastLoginIp; }
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @com.alibaba.fastjson2.annotation.JSONField(serialize = false)
     public Date getLastLoginTime() { return lastLoginTime; }
     public void setLastLoginTime(Date lastLoginTime) { this.lastLoginTime = lastLoginTime; }
 

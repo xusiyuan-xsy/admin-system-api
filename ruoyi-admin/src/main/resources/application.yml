@@ -101,6 +101,16 @@ token:
   # 令牌有效期（默认30分钟）
   expireTime: 30
 
+# 成功结案需先确认业务核实标准，再通过环境变量启用
+dating:
+  success:
+    enabled: ${DATING_SUCCESS_ENABLED:false}
+  recovery:
+    enabled: ${DATING_RECOVERY_ENABLED:true}
+    delay-ms: ${DATING_RECOVERY_DELAY_MS:30000}
+    stale-ms: ${DATING_RECOVERY_STALE_MS:120000}
+    overdue-ms: ${DATING_RECOVERY_OVERDUE_MS:300000}
+
 # MyBatis配置
 mybatis:
   # 搜索指定包别名
@@ -116,20 +126,6 @@ pagehelper:
   supportMethodsArguments: true
   params: count=countSql
 
-# Springdoc配置
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    enabled: true
-    path: /swagger-ui.html
-    tags-sorter: alpha
-  group-configs:
-    - group: 'default'
-      display-name: '测试模块'
-      paths-to-match: '/**'
-      packages-to-scan: com.ruoyi.web.controller.tool
-
 # 防盗链配置
 referer:
   # 防盗链开关
@@ -144,7 +140,7 @@ xss:
   # 排除链接（多个用逗号分隔）
   excludes: /system/notice
   # 匹配链接
-  urlPatterns: /system/*,/monitor/*,/tool/*
+  urlPatterns: /system/*,/monitor/*
 
   # 阿里云OSS配置
 aliyun:

@@ -1,9 +1,8 @@
 package com.ruoyi.web.controller.system;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.io.IOException;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -23,9 +22,9 @@ import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
-import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.core.domain.entity.SysPayingUser;
 import com.ruoyi.system.service.ISysPayingUserService;
+import com.ruoyi.system.service.DatingArchiveExportService;
 
 /**
  * Paying users / sys_paying_user CRUD
@@ -37,9 +36,11 @@ public class SysPayingUsersController extends BaseController
     @Autowired
     private ISysPayingUserService payingUserService;
 
+    @Autowired
+    private DatingArchiveExportService archiveExportService;
 
     /**
-     * Paying user stats: del_flag=0 count, status breakdown, sex totals, birth-year breakdown.
+     * Scoped archive totals, service states, successful people/cases and birth years.
      */
     @PreAuthorize("@ss.hasPermi('system:payingUsers:list')")
     @GetMapping("/stats")
@@ -60,17 +61,23 @@ public class SysPayingUsersController extends BaseController
         return getDataTable(list);
     }
 
-    @Log(title = "用户管理", businessType = BusinessType.EXPORT)
+    @Log(title = "用户管理", businessType = BusinessType.EXPORT, isSaveRequestData = false, isSaveResponseData = false)
     @PreAuthorize("@ss.hasPermi('system:payingUsers:export')")
     @PostMapping("/export")
-    public void export(HttpServletResponse response, SysPayingUser user)
+    public void export(HttpServletResponse response, SysPayingUser user) throws IOException
     {
         List<SysPayingUser> list = payingUserService.selectPayingUserList(user);
-        ExcelUtil<SysPayingUser> util = new ExcelUtil<SysPayingUser>(SysPayingUser.class);
-        util.exportExcel(response, list, "用户数据");
+        archiveExportService.export(response, list);
     }
 
-    @Log(title = "用户管理", businessType = BusinessType.IMPORT)
+    @PreAuthorize("@ss.hasPermi('system:payingUsers:export')")
+    @PostMapping("/export/estimate")
+    public AjaxResult estimateExport(SysPayingUser user)
+    {
+        return success(archiveExportService.estimate(payingUserService.selectPayingUserList(user)));
+    }
+
+    @Log(title = "用户管理", businessType = BusinessType.IMPORT, isSaveRequestData = false, isSaveResponseData = false)
     @PreAuthorize("@ss.hasPermi('system:payingUsers:import')")
     @PostMapping("/importData")
     public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception
@@ -83,6 +90,7 @@ public class SysPayingUsersController extends BaseController
     }
     
     @PostMapping("/importTemplate")
+    @PreAuthorize("@ss.hasPermi('system:payingUsers:import')")
     public void importTemplate(HttpServletResponse response)
     {
         ExcelUtil<SysPayingUser> util = new ExcelUtil<SysPayingUser>(SysPayingUser.class);
@@ -109,7 +117,7 @@ public class SysPayingUsersController extends BaseController
      * 新增用户
      */
     @PreAuthorize("@ss.hasPermi('system:payingUsers:add')")
-    @Log(title = "用户管理", businessType = BusinessType.INSERT)
+    @Log(title = "用户管理", businessType = BusinessType.INSERT, isSaveRequestData = false, isSaveResponseData = false)
     @PostMapping
     public AjaxResult add(@Validated @RequestBody SysPayingUser user)
     {
@@ -118,7 +126,6 @@ public class SysPayingUsersController extends BaseController
             return error("新增用户失败，手机号码已存在");
         }
         user.setCreateBy(getUsername());
-        user.setPassword(SecurityUtils.encryptPassword(user.getPassword()));
         return toAjax(payingUserService.insertPayingUser(user));
     }
 
@@ -126,14 +133,10 @@ public class SysPayingUsersController extends BaseController
      * 修改用户
      */
     @PreAuthorize("@ss.hasPermi('system:payingUsers:edit')")
-    @Log(title = "用户管理", businessType = BusinessType.UPDATE)
+    @Log(title = "用户管理", businessType = BusinessType.UPDATE, isSaveRequestData = false, isSaveResponseData = false)
     @PutMapping
     public AjaxResult edit(@Validated @RequestBody SysPayingUser user)
     {
-        if (StringUtils.isNotEmpty(user.getPhone()) && !payingUserService.checkPhoneUnique(user))
-        {
-            return error("修改用户失败，手机号码已存在");
-        }
         user.setUpdateBy(getUsername());
         return toAjax(payingUserService.updatePayingUser(user));
     }

@@ -2,12 +2,20 @@ package com.ruoyi.system.service.impl;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashSet;
+import com.ruoyi.common.utils.DatingPhotoReferences;
+import com.ruoyi.system.service.DatingPhotoStorage;
+import com.ruoyi.system.service.DatingArchiveAccess;
+import com.ruoyi.system.service.DatingRequirementRules;
 import jakarta.validation.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 import com.ruoyi.common.constant.UserConstants;
 import com.ruoyi.common.core.domain.entity.SysPayingRequirement;
 import com.ruoyi.common.core.domain.entity.SysPayingUser;
@@ -15,7 +23,6 @@ import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanValidators;
 import com.ruoyi.common.exception.ServiceException;
-import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.system.service.ISysConfigService;
 import com.ruoyi.system.mapper.SysPayingUserMapper;
 import com.ruoyi.system.domain.vo.SysPayingUserBirthYearStatVo;
@@ -39,6 +46,38 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
     @Autowired
     protected Validator validator;
 
+    @Autowired
+    private DatingArchiveAccess access;
+
+    @Autowired
+    private DatingPhotoStorage photoStorage;
+
+    private SysPayingUser protectPhotos(SysPayingUser user)
+    {
+        if (user != null && user.getPhotos() != null)
+        {
+            List<String> visible = user.getPhotos().stream()
+                .filter(ref -> DatingPhotoReferences.belongsTo(ref, user.getId())).toList();
+            user.setLegacyPhotoCount(user.getPhotos().size() - visible.size());
+            user.setPhotos(visible);
+        }
+        return user;
+    }
+
+    private void validatePhotos(SysPayingUser user)
+    {
+        if (user.getPhotos() == null) return;
+        if (user.getPhotos().size() > 9
+            || new HashSet<>(user.getPhotos()).size() != user.getPhotos().size())
+            throw new ServiceException("最多保存9张照片且不得重复");
+        for (String reference : user.getPhotos())
+        {
+            if (!DatingPhotoReferences.belongsTo(reference, user.getId()))
+                throw new ServiceException("照片不存在或无权访问");
+            photoStorage.validate(user.getId(), reference);
+        }
+    }
+
     /**
      * 根据条件分页查询用户列表
      * 
@@ -48,18 +87,25 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
     @Override
     public List<SysPayingUser> selectPayingUserList(SysPayingUser user)
     {
-        return payingUserMapper.selectPayingUserList(user);
+        access.scope(user);
+        List<SysPayingUser> list = payingUserMapper.selectPayingUserList(user);
+        list.forEach(this::protectPhotos);
+        return list;
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public SysPayingUserStatsVo selectPayingUserStats()
     {
-        SysPayingUserStatsVo vo = payingUserMapper.selectPayingUserStatsOverview();
+        SysPayingUser query = new SysPayingUser();
+        access.scope(query);
+        SysPayingUserStatsVo vo = payingUserMapper.selectPayingUserStatsOverview(query);
         if (vo == null)
         {
             vo = new SysPayingUserStatsVo();
         }
-        List<SysPayingUserBirthYearStatVo> byYear = payingUserMapper.selectPayingUserBirthYearStats();
+        List<SysPayingUserBirthYearStatVo> byYear = payingUserMapper.selectPayingUserBirthYearStats(query);
+        vo.setSuccessCaseCount(payingUserMapper.selectSuccessCaseCount(query));
         vo.setBirthYearStats(byYear != null ? byYear : Collections.emptyList());
         return vo;
     }
@@ -73,7 +119,11 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
     @Override
     public List<SysPayingUser> selectPayingUserListByRequirement(SysPayingRequirement requirement)
     {
-        return payingUserMapper.selectPayingUserListByRequirement(requirement);
+        DatingRequirementRules.validate(requirement);
+        access.scope(requirement);
+        List<SysPayingUser> list = payingUserMapper.selectPayingUserListByRequirement(requirement);
+        list.forEach(this::protectPhotos);
+        return list;
     }
 
     /**
@@ -101,9 +151,11 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
      * @return 用户对象信息
      */
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public SysPayingUser selectPayingUserById(Long id)
     {
-        return payingUserMapper.selectPayingUserById(id);
+        access.check(id, false);
+        return protectPhotos(payingUserMapper.selectPayingUserById(id));
     }
     /**
      * 新增用户信息
@@ -115,6 +167,14 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
     @Transactional
     public int insertPayingUser(SysPayingUser user)
     {
+        if (user.getPhotos() != null && !user.getPhotos().isEmpty())
+            throw new ServiceException("请先保存档案再上传照片");
+        user.setCreateBy(SecurityUtils.getUsername());
+        String password = user.getPassword();
+        if (password == null || password.isBlank())
+            password = configService.selectConfigByKey("sys.user.initPassword");
+        user.setPassword(SecurityUtils.encryptPassword(password));
+        if (!checkPhoneUnique(user)) throw new ServiceException("手机号码已存在");
         return payingUserMapper.insertPayingUser(user);
     }
 
@@ -125,8 +185,22 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updatePayingUser(SysPayingUser user)
     {
+        access.check(user.getId(), true);
+        validatePhotos(user);
+        if (user.getPhotos() != null)
+        {
+            // Keep legacy references for a deliberate migration, never silently erase them.
+            List<String> photos = new ArrayList<>(user.getPhotos());
+            List<String> existing = payingUserMapper.selectPayingUserById(user.getId()).getPhotos();
+            if (existing != null) existing.stream()
+                .filter(ref -> !DatingPhotoReferences.belongsTo(ref, user.getId())).forEach(photos::add);
+            user.setPhotos(photos);
+        }
+        user.setUpdateBy(SecurityUtils.getUsername());
+        if (!checkPhoneUnique(user)) throw new ServiceException("手机号码已存在");
         return payingUserMapper.updatePayingUser(user);
     }
 
@@ -137,8 +211,12 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deletePayingUserByIds(Long[] ids)
     {
+        if (ids == null || ids.length == 0 || Arrays.stream(ids).anyMatch(java.util.Objects::isNull))
+            throw new ServiceException("请选择客户");
+        Arrays.stream(ids).distinct().sorted().forEach(access::checkDeletable);
         return payingUserMapper.deletePayingUserByIds(ids);
     }
     /**
@@ -150,6 +228,7 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public String importPayingUser(List<SysPayingUser> userList, Boolean isUpdateSupport, String operName)
     {
         if (StringUtils.isNull(userList) || userList.size() == 0)
@@ -165,43 +244,42 @@ public class SysPayingUserServiceImpl implements ISysPayingUserService
             try
             {
                 // 验证是否存在这个用户
-                SysPayingUser u = payingUserMapper.selectPayingUserById(user.getId());
+                SysPayingUser u = payingUserMapper.checkPhoneUnique(user.getPhone());
                 if (StringUtils.isNull(u))
                 {
                     BeanValidators.validateWithException(validator, user);
-                    String password = configService.selectConfigByKey("sys.user.initPassword");
-                    user.setPassword(SecurityUtils.encryptPassword(password));
-                    user.setCreateBy(operName);
-                    payingUserMapper.insertPayingUser(user);
+                    user.setId(null);
+                    user.setPassword(null);
+                    insertPayingUser(user);
                     successNum++;
-                    successMsg.append("<br/>" + successNum + "、用户 " + user.getPhone() + " 导入成功");
+                    successMsg.append("<br/>第 " + successNum + " 行导入成功");
                 }
-                else if (isUpdateSupport)
+                else if (Boolean.TRUE.equals(isUpdateSupport))
                 {
                     BeanValidators.validateWithException(validator, user);
                     user.setId(u.getId());
                     user.setUpdateBy(operName);
-                    payingUserMapper.updatePayingUser(user);
+                    updatePayingUser(user);
                     successNum++;
-                    successMsg.append("<br/>" + successNum + "、用户 " + user.getPhone() + " 更新成功");
+                    successMsg.append("<br/>第 " + successNum + " 行更新成功");
                 }
                 else
                 {
                     failureNum++;
-                    failureMsg.append("<br/>" + failureNum + "、用户 " + user.getPhone() + " 已存在");
+                    failureMsg.append("<br/>第 " + (successNum + failureNum) + " 行手机号已存在");
                 }
             }
             catch (Exception e)
             {
                 failureNum++;
-                String msg = "<br/>" + failureNum + "、用户 " + user.getPhone() + " 导入失败：";
-                failureMsg.append(msg + e.getMessage());
-                log.error(msg, e);
+                String msg = "<br/>第 " + (successNum + failureNum) + " 行导入失败，请检查格式、重复手机号及客户权限";
+                failureMsg.append(msg);
+                log.warn("Archive import rejected at row {}", successNum + failureNum);
             }
         }
         if (failureNum > 0)
         {
-            failureMsg.insert(0, "很抱歉，导入失败！共 " + failureNum + " 条数据格式不正确，错误如下：");
+            failureMsg.insert(0, "导入已全部回滚，共 " + failureNum + " 条失败：");
             throw new ServiceException(failureMsg.toString());
         }
         else

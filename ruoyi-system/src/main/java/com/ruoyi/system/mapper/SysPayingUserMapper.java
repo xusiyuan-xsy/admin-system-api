@@ -48,10 +48,12 @@ public interface SysPayingUserMapper
     /**
      * 有效用户汇总：del_flag/status/性别数量（仅统计 del_flag=0）
      */
-    public SysPayingUserStatsVo selectPayingUserStatsOverview();
+    public SysPayingUserStatsVo selectPayingUserStatsOverview(SysPayingUser query);
+
+    public Long selectSuccessCaseCount(SysPayingUser query);
 
     /**
      * 按出生年份统计男女人数（仅 del_flag=0 且 birth_year 非空）
      */
-    public List<SysPayingUserBirthYearStatVo> selectPayingUserBirthYearStats();
+    public List<SysPayingUserBirthYearStatVo> selectPayingUserBirthYearStats(SysPayingUser query);
 }

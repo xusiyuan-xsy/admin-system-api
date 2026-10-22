@@ -4,55 +4,55 @@ import java.util.List;
 import com.ruoyi.common.core.domain.entity.DatingPackage;
 
 /**
- * Ì×²Í ÒµÎñ²ã
+ * å¥—é¤ ä¸šåŠ¡å±‚
  */
 public interface IDatingPackageService
 {
     /**
-     * ²éÑ¯Ì×²ÍÁĞ±í
+     * æŸ¥è¯¢å¥—é¤åˆ—è¡¨
      *
-     * @param datingPackage Ì×²ÍĞÅÏ¢
-     * @return Ì×²ÍÁĞ±í
+     * @param datingPackage å¥—é¤ä¿¡æ¯
+     * @return å¥—é¤åˆ—è¡¨
      */
     List<DatingPackage> selectDatingPackageList(DatingPackage datingPackage);
 
     /**
-     * ¸ù¾İÌ×²ÍID²éÑ¯Ì×²ÍĞÅÏ¢
+     * æ ¹æ®å¥—é¤IDæŸ¥è¯¢å¥—é¤ä¿¡æ¯
      *
-     * @param packageId Ì×²ÍID
-     * @return Ì×²ÍĞÅÏ¢
+     * @param packageId å¥—é¤ID
+     * @return å¥—é¤ä¿¡æ¯
      */
     DatingPackage selectDatingPackageById(Long packageId);
 
     /**
-     * ĞÂÔöÌ×²Í
+     * æ–°å¢å¥—é¤
      *
-     * @param datingPackage Ì×²ÍĞÅÏ¢
-     * @return ½á¹û
+     * @param datingPackage å¥—é¤ä¿¡æ¯
+     * @return ç»“æœ
      */
     int insertDatingPackage(DatingPackage datingPackage);
 
     /**
-     * ĞŞ¸ÄÌ×²Í
+     * ä¿®æ”¹å¥—é¤
      *
-     * @param datingPackage Ì×²ÍĞÅÏ¢
-     * @return ½á¹û
+     * @param datingPackage å¥—é¤ä¿¡æ¯
+     * @return ç»“æœ
      */
     int updateDatingPackage(DatingPackage datingPackage);
 
     /**
-     * É¾³ıÌ×²Í
+     * åˆ é™¤å¥—é¤
      *
-     * @param packageId Ì×²ÍID
-     * @return ½á¹û
+     * @param packageId å¥—é¤ID
+     * @return ç»“æœ
      */
     int deleteDatingPackageById(Long packageId);
 
     /**
-     * ÅúÁ¿É¾³ıÌ×²Í
+     * æ‰¹é‡åˆ é™¤å¥—é¤
      *
-     * @param packageIds Ì×²ÍIDÊı×é
-     * @return ½á¹û
+     * @param packageIds å¥—é¤IDæ•°ç»„
+     * @return ç»“æœ
      */
     int deleteDatingPackageByIds(Long[] packageIds);
 }

@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.DatingBillingMapper">
+    <resultMap id="option" type="com.ruoyi.system.domain.DatingServiceOption">
+        <id column="option_id" property="optionId"/>
+        <result column="completion_standard" property="completionStandard"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    <resultMap id="customer" type="com.ruoyi.system.domain.DatingCustomer">
+        <id column="user_id" property="userId"/>
+        <result column="effective_owner" property="effectiveOwner"/>
+        <result column="create_by" property="createBy"/>
+        <result column="service_status" property="serviceStatus"/>
+    </resultMap>
+    <resultMap id="order" type="com.ruoyi.system.domain.DatingOrder">
+        <id column="order_id" property="orderId"/>
+        <result column="effective_owner" property="effectiveOwner"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="package_id" property="packageId"/>
+        <result column="package_name" property="packageName"/>
+        <result column="service_times" property="serviceTimes"/>
+        <result column="rule_snapshot" property="ruleSnapshot"/>
+        <result column="request_key" property="requestKey"/>
+        <result column="paid_amount" property="paidAmount"/>
+        <result column="payment_method" property="paymentMethod"/>
+        <result column="payment_reference" property="paymentReference"/>
+        <result column="paid_at" property="paidAt"/>
+        <result column="confirmed_by" property="confirmedBy"/>
+        <result column="confirmed_at" property="confirmedAt"/>
+        <result column="cancel_reason" property="cancelReason"/>
+        <result column="entitlement_id" property="entitlementId"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+    <resultMap id="entitlement" type="com.ruoyi.system.domain.DatingEntitlement">
+        <id column="entitlement_id" property="entitlementId"/>
+        <result column="order_id" property="orderId"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="package_name" property="packageName"/>
+        <result column="total_times" property="totalTimes"/>
+        <result column="used_times" property="usedTimes"/>
+        <result column="remaining_times" property="remainingTimes"/>
+        <result column="rule_snapshot" property="ruleSnapshot"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+    <sql id="optionColumns">
+        option_id, code, name, completion_standard, status, create_by, create_time, update_by, update_time
+    </sql>
+    <select id="selectOptions" resultMap="option">
+        select <include refid="optionColumns"/> from dating_service_option
+        <where><if test="status != null and status != ''">status = #{status}</if></where>
+        order by option_id
+    </select>
+    <select id="lockOption" resultMap="option">
+        select <include refid="optionColumns"/> from dating_service_option where option_id = #{optionId} for update
+    </select>
+    <select id="selectOptionsByCodes" resultMap="option">
+        select <include refid="optionColumns"/> from dating_service_option where code in
+        <foreach collection="codes" item="code" open="(" close=")" separator=",">#{code}</foreach>
+        order by option_id
+    </select>
+    <insert id="insertOption" useGeneratedKeys="true" keyProperty="optionId">
+        insert into dating_service_option (code, name, completion_standard, status, create_by, create_time)
+        values (#{code}, #{name}, #{completionStandard}, #{status}, #{createBy}, current_timestamp)
+    </insert>
+    <update id="updateOption">
+        update dating_service_option set name = #{name}, completion_standard = #{completionStandard},
+        status = #{status}, update_by = #{updateBy}, update_time = current_timestamp where option_id = #{optionId}
+    </update>
+    <sql id="effectiveOwner">
+        (case when u.matchmaker_id is null then u.create_by
+          else (select s.user_name from sys_user s where s.user_id=u.matchmaker_id) end)
+    </sql>
+    <select id="selectCustomers" resultMap="customer">
+        select id as user_id, name, phone, status, create_by, service_status,
+        <include refid="effectiveOwner"/> as effective_owner
+        from sys_paying_user u where del_flag = '0'
+        <if test="owner != null">and <include refid="effectiveOwner"/> = #{owner}</if>
+        <if test="keyword != null and keyword != ''">
+            and (name like concat('%', #{keyword}, '%') or phone like concat('%', #{keyword}, '%'))
+        </if>
+        order by id desc
+    </select>
+    <select id="lockCustomer" resultMap="customer">
+        select id as user_id, name, phone, status, create_by, service_status,
+        <include refid="effectiveOwner"/> as effective_owner
+        from sys_paying_user u where id = #{userId} and del_flag = '0' for update
+    </select>
+    <update id="updateServiceStatus">
+        update sys_paying_user set service_status = #{status} where id = #{userId}
+    </update>
+    <sql id="orderColumns">
+        o.order_id, o.order_no, o.user_id, u.name as user_name, o.package_id, o.package_name, o.amount,
+        o.service_times, o.rule_snapshot, o.status, o.request_key, o.paid_amount, o.payment_method,
+        o.payment_reference, o.paid_at, o.confirmed_by, o.confirmed_at, o.cancel_reason,
+        o.create_by, o.create_time, o.remark, e.entitlement_id,
+        <include refid="effectiveOwner"/> as effective_owner
+    </sql>
+    <sql id="orderTables">
+        from dating_order o join sys_paying_user u on u.id = o.user_id
+        left join dating_entitlement e on e.order_id = o.order_id
+    </sql>
+    <select id="selectOrders" resultMap="order">
+        select <include refid="orderColumns"/> <include refid="orderTables"/>
+        <where>
+            <if test="owner != null">and <include refid="effectiveOwner"/> = #{owner}</if>
+            <if test="orderNo != null and orderNo != ''">and o.order_no like concat('%', #{orderNo}, '%')</if>
+            <if test="status != null and status != ''">and o.status = #{status}</if>
+            <if test="userId != null">and o.user_id = #{userId}</if>
+        </where>
+        order by o.order_id desc
+    </select>
+    <select id="selectOrder" resultMap="order" flushCache="true" useCache="false">
+        select <include refid="orderColumns"/> <include refid="orderTables"/> where o.order_id = #{orderId}
+    </select>
+    <select id="lockOrder" resultMap="order">
+        select * from dating_order where order_id = #{orderId} for update
+    </select>
+    <select id="selectByRequestKey" resultMap="order">
+        select * from dating_order where create_by = #{actor} and request_key = #{key}
+    </select>
+    <select id="countOpenOrders" resultType="int">
+        select count(*) from dating_order where user_id = #{userId} and status = 'UNPAID'
+    </select>
+    <insert id="insertOrder" useGeneratedKeys="true" keyProperty="orderId">
+        insert into dating_order (order_no, user_id, package_id, package_name, amount, service_times,
+            rule_snapshot, status, request_key, create_by, create_time, remark)
+        values (#{orderNo}, #{userId}, #{packageId}, #{packageName}, #{amount}, #{serviceTimes},
+            #{ruleSnapshot}, 'UNPAID', #{requestKey}, #{createBy}, current_timestamp, #{remark})
+    </insert>
+    <update id="confirmOrder">
+        update dating_order set status = 'PAID', paid_amount = #{paidAmount}, payment_method = #{paymentMethod},
+            payment_reference = #{paymentReference}, paid_at = #{paidAt}, confirmed_by = #{confirmedBy},
+            confirmed_at = current_timestamp where order_id = #{orderId} and status = 'UNPAID'
+    </update>
+    <update id="cancelOrder">
+        update dating_order set status = 'CANCELLED', cancel_reason = #{cancelReason},
+            update_by = #{updateBy}, update_time = current_timestamp
+        where order_id = #{orderId} and status = 'UNPAID'
+    </update>
+    <select id="selectEntitlements" resultMap="entitlement">
+        select e.*, o.order_no, o.package_name, u.name as user_name
+        from dating_entitlement e join dating_order o on o.order_id = e.order_id
+        join sys_paying_user u on u.id = e.user_id
+        <where>
+            <if test="userId != null">and e.user_id = #{userId}</if>
+            <if test="owner != null">and <include refid="effectiveOwner"/> = #{owner}</if>
+        </where>
+        order by e.entitlement_id desc
+    </select>
+    <select id="selectActiveEntitlement" resultMap="entitlement">
+        select * from dating_entitlement where user_id = #{userId} and status = 'ACTIVE'
+    </select>
+    <select id="selectEntitlement" resultMap="entitlement">
+        select e.*,o.order_no,o.package_name,u.name as user_name
+        from dating_entitlement e join dating_order o on o.order_id=e.order_id
+        join sys_paying_user u on u.id=e.user_id
+        where e.entitlement_id=#{id}
+        <if test="owner != null">and <include refid="effectiveOwner"/> = #{owner}</if>
+    </select>
+    <select id="selectEntitlementLedger" resultType="com.ruoyi.system.domain.DatingEntitlementLedgerEntry">
+        select ledger_id as ledgerId,entry_type as entryType,delta,
+            balance_before as balanceBefore,balance_after as balanceAfter,
+            pair_id as pairId,event_id as eventId,create_by as createBy,create_time as createTime
+        from dating_entitlement_ledger where entitlement_id=#{id} order by ledger_id
+    </select>
+    <select id="selectIntegrityIssues" resultType="com.ruoyi.system.domain.DatingIntegrityIssue">
+        select q.user_id,q.order_id,q.entitlement_id,q.code from (
+            select e.user_id,e.order_id,e.entitlement_id,'BALANCE_LEDGER' as code
+            from dating_entitlement e where
+                e.total_times != e.used_times+e.remaining_times or e.used_times &lt; 0 or e.remaining_times &lt; 0
+                or (select count(*) from dating_entitlement_ledger l where l.entitlement_id=e.entitlement_id and l.entry_type='OPEN') != 1
+                or e.total_times != coalesce((select sum(l.delta) from dating_entitlement_ledger l where l.entitlement_id=e.entitlement_id and l.entry_type='OPEN'),0)
+                or e.used_times != (select count(*) from dating_entitlement_ledger l where l.entitlement_id=e.entitlement_id and l.entry_type='SERVICE_DEDUCT')
+                or e.remaining_times != coalesce((select sum(l.delta) from dating_entitlement_ledger l where l.entitlement_id=e.entitlement_id),0)
+                or exists(select 1 from dating_entitlement_ledger l where l.entitlement_id=e.entitlement_id
+                    and (l.user_id != e.user_id or l.order_id != e.order_id or l.balance_before+l.delta != l.balance_after
+                        or l.entry_type not in ('OPEN','SERVICE_DEDUCT')
+                        or (l.entry_type='OPEN' and (l.balance_before != 0 or l.balance_after != e.total_times))
+                        or (l.entry_type='SERVICE_DEDUCT' and (l.delta != -1 or l.pair_id is null or l.event_id is null))
+                        or (l.entry_type='SERVICE_DEDUCT' and l.balance_before !=
+                            coalesce((select prev.balance_after from dating_entitlement_ledger prev
+                                where prev.entitlement_id=l.entitlement_id and prev.ledger_id&lt;l.ledger_id
+                                order by prev.ledger_id desc limit 1),-1))))
+            union all
+            select o.user_id,o.order_id,e.entitlement_id,'ORDER_PAYMENT' as code
+            from dating_order o left join dating_entitlement e on e.order_id=o.order_id
+            left join dating_payment_record p on p.order_id=o.order_id
+            where (o.status='PAID' and (e.entitlement_id is null or p.payment_id is null
+                or o.paid_amount is null or o.payment_method is null or o.payment_reference is null or o.paid_at is null
+                or o.paid_amount != o.amount or p.paid_amount != o.amount
+                or p.payment_method != o.payment_method or p.payment_reference != o.payment_reference
+                or p.paid_at != o.paid_at or e.user_id != o.user_id or e.total_times != o.service_times
+                or e.rule_snapshot != o.rule_snapshot))
+                or (o.status != 'PAID' and (e.entitlement_id is not null or p.payment_id is not null))
+            union all
+            select u.id,null,null,'SERVICE_STATUS' as code from sys_paying_user u where
+                (u.service_status='SERVING' and (select count(*) from dating_entitlement e where e.user_id=u.id and e.status='ACTIVE' and e.remaining_times&gt;0) != 1)
+                or (u.service_status in ('NOT_STARTED','NOT_RENEWED','SUCCESS_CLOSED') and exists(select 1 from dating_entitlement e where e.user_id=u.id and e.status='ACTIVE'))
+                or (u.service_status='NOT_STARTED' and exists(select 1 from dating_entitlement e where e.user_id=u.id))
+                or (u.service_status='NOT_RENEWED' and not exists(select 1 from dating_entitlement e where e.user_id=u.id and e.status='EXHAUSTED'))
+                or (u.service_status='SUCCESS_CLOSED' and not exists(select 1 from dating_success_case_member m where m.user_id=u.id))
+                or (u.service_status!='SUCCESS_CLOSED' and exists(select 1 from dating_success_case_member m where m.user_id=u.id))
+                or exists(select 1 from dating_entitlement e where e.user_id=u.id
+                    and ((e.status='EXHAUSTED' and e.remaining_times!=0) or (e.status='ACTIVE' and e.remaining_times&lt;=0)
+                        or (u.service_status='SUCCESS_CLOSED' and e.status!='SUCCESS_CLOSED')))
+        ) q join sys_paying_user u on u.id=q.user_id
+        where 1=1
+        <if test="userId != null">and q.user_id=#{userId}</if>
+        <if test="owner != null">and <include refid="effectiveOwner"/> = #{owner}</if>
+        order by q.user_id,q.order_id,q.entitlement_id,q.code
+    </select>
+    <insert id="insertEntitlement" useGeneratedKeys="true" keyProperty="entitlementId">
+        insert into dating_entitlement (order_id, user_id, total_times, used_times, remaining_times,
+            status, rule_snapshot, create_by, create_time)
+        values (#{orderId}, #{userId}, #{totalTimes}, 0, #{totalTimes}, 'ACTIVE',
+            #{ruleSnapshot}, #{createBy}, current_timestamp)
+    </insert>
+    <insert id="insertPayment">
+        insert into dating_payment_record (order_id, paid_amount, payment_method, payment_reference,
+            paid_at, confirmed_by, confirmed_at, remark)
+        values (#{orderId}, #{paidAmount}, #{paymentMethod}, #{paymentReference},
+            #{paidAt}, #{confirmedBy}, current_timestamp, #{remark})
+    </insert>
+    <insert id="insertOpeningLedger">
+        insert into dating_entitlement_ledger (entitlement_id, order_id, user_id, entry_type,
+            delta, balance_before, balance_after, create_by, create_time)
+        values (#{entitlement.entitlementId}, #{entitlement.orderId}, #{entitlement.userId},
+            'OPEN', #{entitlement.totalTimes}, 0, #{entitlement.totalTimes}, #{actor}, current_timestamp)
+    </insert>
+</mapper>
