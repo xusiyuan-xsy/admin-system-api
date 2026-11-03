@@ -4,6 +4,13 @@
 
 #### 基于SpringBoot+Vue前后端分离的Java快速开发框架
 
+## 当前项目结构
+
+- 当前前端为独立项目 `../admin-page`（Vue 3、Element Plus、Vite）。
+- 后端旧前端目录 `ruoyi-ui` 及代码生成器残留目录 `ruoyi-generator` 已清理，不参与构建或部署。
+- 当前 Maven 模块为 `ruoyi-admin`、`ruoyi-framework`、`ruoyi-system`、`ruoyi-quartz`、`ruoyi-common`。
+- 下方保留的上游框架介绍不代表当前项目启用了全部功能；代码生成器已退役，相关历史 SQL、菜单清理迁移和安全拦截规则仍保留。
+
 
 
 mysql -u root -p123456 ry-vue -e "source D:/xsy/newElement/admin-system-api/sql/matchmaking_profile.sql"
